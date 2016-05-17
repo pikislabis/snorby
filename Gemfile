@@ -44,8 +44,10 @@ gem 'dm-aggregates',               DM_VERSION
 gem 'dm-timestamps',               DM_VERSION
 gem 'dm-observer',                 DM_VERSION
 gem 'dm-serializer',               DM_VERSION
-gem 'dm-is-read_only',             '~> 0.3', :git => 'https://github.com/postmodern/dm-is-read_only.git' 
+gem 'dm-is-read_only',             '~> 0.3', :git => 'https://github.com/postmodern/dm-is-read_only.git'
 gem 'dm-chunked_query',            '~> 0.3'
+
+gem 'do_mysql', '~> 0.10.17'
 
 # Deploy with Capistrano
 gem 'capistrano',                  '2.14.1'
@@ -91,7 +93,7 @@ end
 
 group(:test) do
   gem 'capybara'
-  gem 'test-unit'	
+  gem 'test-unit'
   gem 'rspec',                	  RSPEC_VERSION
   gem 'rspec-core',               RSPEC_VERSION, :require => 'rspec/core'
   gem 'rspec-expectations',       RSPEC_VERSION, :require => 'rspec/expectations'
