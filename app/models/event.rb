@@ -1,12 +1,6 @@
 require 'netaddr'
-require 'snorby/model/counter'
-require 'snorby/pager'
 
-class Event
-
-  include DataMapper::Resource
-  include Snorby::Model::Counter
-
+class Event < ActiveRecord::Base
   #
   # Cache Helpers
   #
@@ -17,78 +11,81 @@ class Event
 
   SIGNATURE_URL = "http://rootedyour.com/snortsid?sid=$$gid$$-$$sid$$"
 
-  storage_names[:default] = "event"
+  self.table_name = 'event'
+  self.inheritance_column = ''
 
-  property :sid, Integer, :key => true, :index => true, :min => 0
+  # property :sid, Integer, :key => true, :index => true, :min => 0
+  #
+  # property :cid, Integer, :key => true, :index => true, :min => 0
+  #
+  # property :sig_id, Integer, :field => 'signature', :index => true, :min => 0
+  #
+  # property :classification_id, Integer, :index => true, :required => false, :min => 0
+  #
+  # property :users_count, Integer, :index => true, :default => 0, :min => 0
+  #
+  # property :user_id, Integer, :index => true, :required => false, :min => 0
+  #
+  # property :notes_count, Integer, :index => true, :default => 0, :min => 0
 
-  property :cid, Integer, :key => true, :index => true, :min => 0
-
-  property :sig_id, Integer, :field => 'signature', :index => true, :min => 0
-
-  property :classification_id, Integer, :index => true, :required => false, :min => 0
-
-  property :users_count, Integer, :index => true, :default => 0, :min => 0
-
-  property :user_id, Integer, :index => true, :required => false, :min => 0
-  
-  property :notes_count, Integer, :index => true, :default => 0, :min => 0
- 
   # 1 = nids
   # 2 = hids
   # others TBD
-  property :type, Integer, :default => 1, :min => 0 
+  # property :type, Integer, :default => 1, :min => 0
 
   # Fake Column
-  property :number_of_events, Integer, :default => 0, :min => 0
+  # property :number_of_events, Integer, :default => 0, :min => 0
   #
   # property :event_id, Integer
   ###
 
   belongs_to :classification
 
-  property :timestamp, ZonedTime
+  # property :timestamp, ZonedTime
 
-  has n, :favorites, :parent_key => [ :sid, :cid ], 
-    :child_key => [ :sid, :cid ], :constraint => :destroy!
+  has_many :favorites, foreign_key: [ :sid, :cid ],
+    primary_key: [ :sid, :cid ], :dependent => :destroy
 
-  has n, :users, :through => :favorites
+  has_many :users, :through => :favorites
 
-  has 1, :severity, :through => :signature, :via => :sig_priority
+  has_one :severity, :through => :signature, :foreign_key => :sig_priority
 
-  has 1, :payload, :parent_key => [ :sid, :cid ], 
-    :child_key => [ :sid, :cid ], :constraint => :destroy!
+  has_one :payload, :foreign_key => [ :sid, :cid ],
+    :primary_key => [ :sid, :cid ], :dependent => :destroy
 
-  has 1, :icmp, :parent_key => [ :sid, :cid ], 
-    :child_key => [ :sid, :cid ], :constraint => :destroy!
+  has_one :icmp, :foreign_key => [ :sid, :cid ],
+    :primary_key => [ :sid, :cid ], :dependent => :destroy
 
-  has 1, :tcp, :parent_key => [ :sid, :cid ], 
-    :child_key => [ :sid, :cid ], :constraint => :destroy!
+  has_one :tcp, :foreign_key => [ :sid, :cid ],
+    :primary_key => [ :sid, :cid ], :dependent => :destroy
 
-  has 1, :udp, :parent_key => [ :sid, :cid ], 
-    :child_key => [ :sid, :cid ], :constraint => :destroy!
+  has_one :udp, :foreign_key => [ :sid, :cid ],
+    :primary_key => [ :sid, :cid ], :dependent => :destroy
 
-  has 1, :opt, :parent_key => [ :sid, :cid ], 
-    :child_key => [ :sid, :cid ], :constraint => :destroy!
+  has_one :opt, :foreign_key => [ :sid, :cid ],
+    :primary_key => [ :sid, :cid ], :dependent => :destroy
 
-  has n, :notes, :parent_key => [ :sid, :cid ], 
-    :child_key => [ :sid, :cid ], :constraint => :destroy!
+  has_many :notes, :foreign_key => [ :sid, :cid ],
+    :primary_key => [ :sid, :cid ], :dependent => :destroy
 
   belongs_to :user
 
-  belongs_to :sensor, :parent_key => :sid, 
-    :child_key => :sid, :required => true
+  belongs_to :sensor, :foreign_key => :sid,
+    :primary_key => :sid, :required => true
 
-  belongs_to :signature, :child_key => :sig_id, :parent_key => :sig_id
+  belongs_to :signature, :primary_key => :sig_id, :foreign_key => :signature
 
-  belongs_to :ip, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ]
+  belongs_to :ip, :foreign_key => [ :sid, :cid ], :primary_key => [ :sid, :cid ]
 
-  before :destroy do
+  before_destroy do
     self.classification.down(:events_count) if self.classification
     self.signature.down(:events_count) if self.signature
     # Note: Need to decrement Severity, Sensor and User Counts
   end
 
-   SORT = { 
+  default_scope { order('sid ASC, cid ASC') }
+
+   SORT = {
     :sig_priority => 'signature',
     :sid => 'event',
     :ip_src => 'ip',
@@ -100,7 +97,7 @@ class Event
   }
 
   def self.last_event_timestamp
-    event = first(:order => [:timestamp.desc])
+    event = all.order(timestamp: :desc).first
     timestamp = event ? event.timestamp : Time.zone.now
   end
 
@@ -112,14 +109,14 @@ class Event
   def helpers
     ActionController::Base.helpers
   end
- 
+
 
   def self.unique_events_by_source_ip
     data = []
 
     ips = Ip.all(:limit => 25, :fields => [:ip_src], :unique => true).map(&:ip_src)
-    events = ips.collect do |ip| 
-      Event.all(:'ip.ip_src' => ip, :order => :timestamp.desc).group_by do |x| 
+    events = ips.collect do |ip|
+      Event.all(:'ip.ip_src' => ip, :order => :timestamp.desc).group_by do |x|
         x.sig_id
       end
     end
@@ -129,7 +126,7 @@ class Event
       next if set.values.blank?
 
       set.each do |key, value|
-        
+
         data << value.first
       end
     end
@@ -137,12 +134,12 @@ class Event
     data
   end
 
-  def self.sorty(params={}, sql=false, count=false)
+  def self.sorty(params = {}, sql = false, count = false)
     sort = params[:sort]
     direction = params[:direction]
 
     page = {
-      :per_page => (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i)
+      per_page: (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i)
     }
 
     if params.has_key?(:search)
@@ -151,23 +148,23 @@ class Event
       sql[0] += " order by #{sort} #{direction}"
       sql[0] += " LIMIT ? OFFSET ?"
 
-      page(params[:page], { 
-        :per_page => (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i),
-        :order => :timestamp.desc
+      page(params[:page], {
+        per_page: (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i),
+        order: 'timestamp DESC'
       }, sql, count)
     else
 
       if sql
-        
+
         page(params[:page].to_i, page, sql, count);
 
       else
 
         if SORT[sort].downcase == 'event'
-          page.merge!(:order => sort.send(direction))
+          page.merge!(order: '#{sort} #{direction}')
         else
           page.merge!(
-            :order => [Event.send(SORT[sort].to_sym).send(sort).send(direction), 
+            :order => [Event.send(SORT[sort].to_sym).send(sort).send(direction),
                        :timestamp.send(direction)],
             :links => [Event.relationships[SORT[sort].to_s].inverse]
           )
@@ -208,7 +205,7 @@ class Event
     sid, gid = [/\$\$sid\$\$/, /\$\$gid\$\$/]
 
     @signature_url = if Setting.signature_lookup?
-      Setting.find(:signature_lookup) 
+      Setting.find(:signature_lookup)
     else
       SIGNATURE_URL
     end
@@ -232,31 +229,32 @@ class Event
     all(:limit => limit)
   end
 
-  def self.order(column=:timestamp, order=:desc)
-    all(:order => column.to_sym.send(order.to_sym))
-  end
+  # TODO
+  #def self.order(column=:timestamp, order=:desc)
+  #  all(:order => column.to_sym.send(order.to_sym))
+  #end
 
   def to_param
     "#{sid},#{cid}"
   end
 
   def self.last_month
-    all(:timestamp.gte => 2.month.ago.beginning_of_month, 
+    all(:timestamp.gte => 2.month.ago.beginning_of_month,
         :timestamp.lte => 1.month.ago.end_of_month)
   end
 
   def self.last_week
-    all(:timestamp.gte => 2.week.ago.beginning_of_week, 
+    all(:timestamp.gte => 2.week.ago.beginning_of_week,
         :timestamp.lte => 1.week.ago.end_of_week)
   end
 
   def self.yesterday
-    all(:timestamp.gte => 1.day.ago.beginning_of_day, 
+    all(:timestamp.gte => 1.day.ago.beginning_of_day,
         :timestamp.lte => 1.day.ago.end_of_day)
   end
 
   def self.today
-    all(:timestamp.gte => Time.now.beginning_of_day, 
+    all(:timestamp.gte => Time.now.beginning_of_day,
         :timestamp.lte => Time.now.end_of_day)
   end
 
@@ -273,12 +271,12 @@ class Event
   end
 
   def self.between(start_time, end_time)
-    all(:timestamp.gte => start_time, :timestamp.lte => end_time, 
+    all(:timestamp.gte => start_time, :timestamp.lte => end_time,
         :order => [:timestamp.desc])
   end
 
   def self.between_time(start_time, end_time)
-    all(:timestamp.gte => start_time, :timestamp.lt => end_time, 
+    all(:timestamp.gte => start_time, :timestamp.lt => end_time,
         :order => [:timestamp.desc])
   end
 
@@ -315,7 +313,7 @@ class Event
         event = e.split('-')
         event_count += 1
 
-        events.push("(`sid` = #{event.first.to_i} and `cid` = #{event.last.to_i})") 
+        events.push("(`sid` = #{event.first.to_i} and `cid` = #{event.last.to_i})")
       end
 
       sql += events.join(' OR ')
@@ -426,7 +424,7 @@ class Event
   end
 
 
-  def detailed_json 
+  def detailed_json
 
     geoip = Setting.geoip?
     ip = self.ip
@@ -442,7 +440,7 @@ class Event
       :asset_names => self.ip.asset_names,
       :timestamp => self.pretty_time,
       :datetime => self.timestamp.strftime('%A, %b %d, %Y at %I:%M:%S %p'),
-      :message =>  self.signature.name, 
+      :message =>  self.signature.name,
       :geoip => false,
       :src_port => src_port,
       :dst_port => dst_port,
@@ -478,7 +476,7 @@ class Event
   # @return [Hash] hash of events between range.
   #
   def self.to_json_since(time)
-   
+
     if !time
       time = Time.zone.now
     end
@@ -520,7 +518,7 @@ class Event
     return true if User.current_user.events.include?(self)
     false
   end
-  
+
   def toggle_favorite
     if self.favorite?
       destroy_favorite
@@ -561,7 +559,7 @@ class Event
       false
     end
   end
-  
+
   def source_port
     return nil unless protocol_data
 
@@ -571,7 +569,7 @@ class Event
       protocol_data.last.send(:"#{protocol_data.first}_sport")
     end
   end
- 
+
   def rule
     @rule = Snorby::Rule.get({
       :rule_id => signature.sig_sid,
@@ -591,7 +589,7 @@ class Event
       protocol_data.last.send(:"#{protocol_data.first}_dport")
     end
   end
-  
+
   def in_xml
     # add user information
     %{<snorby>#{to_xml}#{ip.to_xml}#{protocol_data.last.to_xml if protocol_data}#{classification.to_xml if classification}#{payload.to_xml if payload}</snorby>}.chomp
@@ -714,11 +712,11 @@ class Event
 
     end
   rescue => e
-    Rails.logger.info(e.backtrace)        
+    Rails.logger.info(e.backtrace)
   end
 
   def self.build_search_hash(column, operator, value)
-   ["#{column} #{operator}", value] 
+   ["#{column} #{operator}", value]
   end
 
   def self.search(params, pager={})
@@ -756,13 +754,13 @@ class Event
     unless params[:signature_name].blank?
       @search.merge!({
         :"signature.sig_name".like => "%#{params[:signature_name]}%"
-      })  
+      })
     end
-    
+
     unless params[:src_port].blank?
       @search.merge!({:"tcp.tcp_sport" => params[:src_port].to_i})
     end
-     
+
     unless params[:dst_port].blank?
       @search.merge!({:"tcp.tcp_dport" => params[:dst_port].to_i})
     end
@@ -777,7 +775,7 @@ class Event
         })
       else
         @search.merge!({:"ip.ip_src".like => IPAddr.new("#{params[:ip_src]}")})
-      end 
+      end
     end
 
     unless params[:ip_dst].blank?
@@ -811,12 +809,12 @@ class Event
 
       if params[:timestamp] =~ /\s\-\s/
         start_time, end_time = params[:timestamp].split(' - ')
-        @search.merge!({:conditions => ['timestamp >= ? AND timestamp <= ?', 
-                       Chronic.parse(start_time).beginning_of_day, 
+        @search.merge!({:conditions => ['timestamp >= ? AND timestamp <= ?',
+                       Chronic.parse(start_time).beginning_of_day,
                        Chronic.parse(end_time).end_of_day]})
       else
-        @search.merge!({:conditions => ['timestamp >= ? AND timestamp <= ?', 
-                       Chronic.parse(params[:timestamp]).beginning_of_day, 
+        @search.merge!({:conditions => ['timestamp >= ? AND timestamp <= ?',
+                       Chronic.parse(params[:timestamp]).beginning_of_day,
                        Chronic.parse(params[:timestamp]).end_of_day]})
       end
 
@@ -825,7 +823,7 @@ class Event
     unless params[:severity].blank?
       @search.merge!({:"signature.sig_priority" => params[:severity].to_i})
     end
-  
+
     search
 
   rescue NetAddr::ValidationError => e

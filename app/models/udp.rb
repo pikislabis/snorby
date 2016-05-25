@@ -1,23 +1,20 @@
-class Udp
+class Udp < ActiveRecord::Base
+  self.table_name = 'udphdr'
 
-  include DataMapper::Resource
+  belongs_to :sensor, :foreign_key => [ :sid ], :primary_key => [ :sid ], :required => true
 
-  storage_names[:default] = "udphdr"
+  belongs_to :event, :foreign_key => [ :sid, :cid ], :primary_key => [ :sid, :cid ], :required => true
 
-  belongs_to :sensor, :parent_key => [ :sid ], :child_key => [ :sid ], :required => true
-  
-  belongs_to :event, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ], :required => true
-
-  property :sid, Integer, :key => true, :index => true, :min => 0
-  
-  property :cid, Integer, :key => true, :index => true, :min => 0
-  
-  property :udp_sport, Integer, :index => true, :min => 0
-  
-  property :udp_dport, Integer, :index => true, :min => 0
-
-  property :udp_len, Integer, :lazy => true, :min => 0
-  
-  property :udp_csum, Integer, :lazy => true, :min => 0
+  # property :sid, Integer, :key => true, :index => true, :min => 0
+  #
+  # property :cid, Integer, :key => true, :index => true, :min => 0
+  #
+  # property :udp_sport, Integer, :index => true, :min => 0
+  #
+  # property :udp_dport, Integer, :index => true, :min => 0
+  #
+  # property :udp_len, Integer, :lazy => true, :min => 0
+  #
+  # property :udp_csum, Integer, :lazy => true, :min => 0
 
 end

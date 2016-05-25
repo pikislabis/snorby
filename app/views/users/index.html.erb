@@ -6,7 +6,7 @@
 <% end %>
 
 <div id="users" class='grid_12 page boxit'>
-	
+
 	<table class='default' border="0" cellspacing="0" cellpadding="0">
 		<tr>
 			<th>Enabled</th>
@@ -24,6 +24,7 @@
 	</table>
 
 
-	<%= pager(@users, 'users') %>
-	
+	<%#= pager(@users, 'users') %>
+	<%= will_paginate @users %>
+
 </div>

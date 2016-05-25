@@ -1,42 +1,39 @@
 require "digest"
 
-class SavedSearch
+class SavedSearch < ActiveRecord::Base
+  self.table_name = 'search'
 
-  include DataMapper::Resource
+  # property :id, Serial, :key => true
+  #
+  # property :user_id, Integer, :index => true
+  #
+  # property :rule_count, Integer, :index => true, :default => 0
+  #
+  # property :public, Boolean, :index => true, :default => false
+  #
+  # property :title, String
+  #
+  # property :search, Object, :lazy => true
+  #
+  # property :checksum, Text
+  #
+  # # timestamps :at
+  # property :created_at, ZonedTime
+  # property :updated_at, ZonedTime
 
-  storage_names[:default] = "search"
-
-  property :id, Serial, :key => true
-  
-  property :user_id, Integer, :index => true
-
-  property :rule_count, Integer, :index => true, :default => 0
-
-  property :public, Boolean, :index => true, :default => false
-
-  property :title, String
-
-  property :search, Object, :lazy => true
-
-  property :checksum, Text
-
-  # timestamps :at
-  property :created_at, ZonedTime
-  property :updated_at, ZonedTime
-  
   belongs_to :user
 
   validates_presence_of :search, :user_id, :title, :checksum
 
   validates_uniqueness_of :checksum
 
-  before :valid?, :set_checksum
+  before_valid? :set_checksum
 
-  before :create do
+  before_create do
     set_checksum
   end
 
-  before :update do
+  before_update do
     set_checksum
   end
 
@@ -45,4 +42,3 @@ class SavedSearch
   end
 
 end
-

@@ -1,77 +1,64 @@
-class DailyCache
- 
-  include DataMapper::Resource
-  
-  storage_names[:default] = "caches"
+class DailyCache < ActiveRecord::Base
+  self.table_name = 'caches'
 
-  property :id, Serial
+  # property :id, Serial
+  #
+  # property :sid, Integer
+  #
+  # property :cid, Integer
+  #
+  # property :ran_at, DateTime
+  #
+  # property :event_count, Integer, :default => 0
+  #
+  # property :tcp_count, Integer, :default => 0
+  #
+  # property :udp_count, Integer, :default => 0
+  #
+  # property :icmp_count, Integer, :default => 0
+  #
+  # property :severity_metrics, Object
+  #
+  # property :signature_metrics, Object
+  #
+  # property :src_ips, Object
+  #
+  # property :dst_ips, Object
+  #
+  # # Define created_at and updated_at timestamps
+  # timestamps :at
+  # property :created_at, ZonedTime
+  # property :updated_at, ZonedTime
 
-  property :sid, Integer
+  serialize :severity_metrics, Hash
+  serialize :signature_metrics, Hash
+  serialize :src_ips, Hash
+  serialize :dst_ips, Hash
 
-  property :cid, Integer
+  belongs_to :sensor, :foreign_key => :sid, :primary_key => :sid
 
-  property :ran_at, DateTime
+  has_one :event, :foreign_key => [:sid, :cid], :primary_key => [:sid, :cid]
 
-  property :event_count, Integer, :default => 0
+  scope :this_year, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_year, Time.zone.now.end_of_year) }
 
-  property :tcp_count, Integer, :default => 0
+  scope :this_quarter, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_quarter, Time.zone.now.end_of_quarter) }
 
-  property :udp_count, Integer, :default => 0
+  scope :last_month, -> { where('ran_at >= ? AND ran_at <= ?', (Time.zone.now - 1.months).beginning_of_month, (Time.zone.now - 1.months).end_of_month) }
 
-  property :icmp_count, Integer, :default => 0
+  scope :this_month, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_month, Time.zone.now.end_of_month) }
 
-  property :severity_metrics, Object
+  scope :last_week, -> { where('ran_at >= ? AND ran_at <= ?', (Time.zone.now - 1.week).beginning_of_week, (Time.zone.now - 1.week).end_of_week) }
 
-  property :signature_metrics, Object
+  scope :this_week, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_week, Time.zone.now.end_of_week) }
 
-  property :src_ips, Object
-
-  property :dst_ips, Object
-
-  # Define created_at and updated_at timestamps
-  timestamps :at
-  property :created_at, ZonedTime
-  property :updated_at, ZonedTime
-
-
-  belongs_to :sensor, :parent_key => :sid, :child_key => :sid
-
-  has 1, :event, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ]
+  scope :yesterday, -> { where('ran_at >= ? AND ran_at <= ?', (Time.zone.now - 1.day).beginning_of_day, (Time.zone.now - 1.day).end_of_day) }
 
   def self.cache_time
     return get_last.ran_at if get_last
   end
 
   def self.get_last
-    first(:order => [:ran_at.desc])
-  end
-
-  def self.this_year
-    all(:ran_at.gte => Time.zone.now.beginning_of_year, :ran_at.lte => Time.zone.now.end_of_year)
-  end
-
-  def self.this_quarter
-    all(:ran_at.gte => Time.zone.now.beginning_of_quarter, :ran_at.lte => Time.zone.now.end_of_quarter)
-  end
-
-  def self.last_month
-    all(:ran_at.gte => (Time.zone.now - 1.months).beginning_of_month, :ran_at.lte => (Time.zone.now - 1.months).end_of_month)
-  end
-
-  def self.this_month
-    all(:ran_at.gte => Time.zone.now.beginning_of_month, :ran_at.lte => Time.zone.now.end_of_month)
-  end
-
-  def self.last_week
-    all(:ran_at.gte => (Time.zone.now - 1.week).beginning_of_week, :ran_at.lte => (Time.zone.now - 1.week).end_of_week)
-  end
-
-  def self.this_week
-    all(:ran_at.gte => Time.zone.now.beginning_of_week, :ran_at.lte => Time.zone.now.end_of_week)
-  end
-
-  def self.yesterday
-    all(:ran_at.gte => (Time.zone.now - 1.day).beginning_of_day, :ran_at.lte => (Time.zone.now - 1.day).end_of_day)
+    order('ran_at DESC').first
   end
 
   def severities
@@ -82,10 +69,10 @@ class DailyCache
     severities.to_json
   end
 
-  def self.protocol_count(protocol, type=:week)
+  def self.protocol_count(protocol, type = :week)
     count = []
 
-    @cache = cache_for_type(self, type)
+    @cache = cache_for_type(type)
 
     if @cache.empty?
 
@@ -110,7 +97,7 @@ class DailyCache
 
   def self.severity_count(severity, type=:week)
     count = []
-    @cache = cache_for_type(self, type)
+    @cache = cache_for_type(type)
 
     severity_type = {
       :high => 1,
@@ -128,7 +115,7 @@ class DailyCache
 
         if @cache.has_key?(i)
           sev_count = 0
-          
+
           @cache[i].map(&:severity_metrics).each do |x|
             sev_count += (x.kind_of?(Hash) ? (x.has_key?(severity_type[severity.to_sym]) ? x[severity_type[severity.to_sym]] : 0) : 0)
           end
@@ -148,11 +135,11 @@ class DailyCache
   def self.sensor_metrics(type=:week)
     @metrics = []
 
-    Sensor.all(:limit => 5, :order => [:events_count.desc]).each do |sensor|
+    Sensor.all.limit(5).order(events_count: :desc).each do |sensor|
       count = []
       time_range = []
 
-      @cache = cache_for_type(self, type, sensor)
+      @cache = cache_for_type(type, sensor)
 
       if @cache.empty?
 
@@ -182,10 +169,35 @@ class DailyCache
     @metrics
   end
 
-  def self.src_metrics(limit=20)
+  def self.src_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = self.map(&:src_ips).compact
+    @cache = all.map(&:src_ips).compact
+    count = 0
+
+    @cache.each do |ip_hash|
+      ip_hash.each do |ip, count|
+        if @metrics.has_key?(ip)
+          @metrics[ip] += count
+        else
+          @metrics.merge!({ip => count})
+        end
+      end
+    end
+
+    @metrics.sort{ |a,b| -1*(a[1]<=>b[1]) }.each do |data|
+      break if count >= limit
+      @top << data
+      count += 1
+    end
+
+    @top
+  end
+
+  def self.dst_metrics(limit = 20)
+    @metrics = {}
+    @top = []
+    @cache = all.map(&:dst_ips).compact
     count = 0
 
     @cache.each do |ip_hash|
@@ -208,36 +220,10 @@ class DailyCache
     @top
   end
 
-  def self.dst_metrics(limit=20)
+  def self.signature_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = self.map(&:dst_ips).compact
-    count = 0
-
-    @cache.each do |ip_hash|
-
-      ip_hash.each do |ip, count|
-        if @metrics.has_key?(ip)
-          @metrics[ip] += count
-        else
-          @metrics.merge!({ip => count})
-        end
-      end
-    end
-
-    @metrics.sort{ |a,b| -1*(a[1]<=>b[1]) }.each do |data|
-      break if count >= limit
-      @top << data
-      count += 1
-    end
-
-    @top
-  end
-
-  def self.signature_metrics(limit=20)
-    @metrics = {}
-    @top = []
-    @cache = self
+    @cache = all
     count = 0
 
     @cache.map(&:signature_metrics).each do |data|
@@ -263,20 +249,20 @@ class DailyCache
     @top
   end
 
-  def self.cache_for_type(collection, type=:week, sensor=false)
+  def self.cache_for_type(type = :week, sensor = false)
     case type.to_sym
     when :week, :last_week
-      return collection.group_by { |x| x.ran_at.day } unless sensor
-      return collection.all(:sid => sensor.sid).group_by { |x| x.ran_at.day }
+      return all.group_by { |x| x.ran_at.day } unless sensor
+      return where(sid: sensor.sid).group_by { |x| x.ran_at.day }
     when :month, :last_month
-      return collection.group_by { |x| x.ran_at.day } unless sensor
-      return collection.all(:sid => sensor.sid).group_by { |x| x.ran_at.day }
+      return all.group_by { |x| x.ran_at.day } unless sensor
+      return where(sid: sensor.sid).group_by { |x| x.ran_at.day }
     when :year, :quarter
-      return collection.group_by { |x| x.ran_at.month } unless sensor
-      return collection.all(:sid => sensor.sid).group_by { |x| x.ran_at.month }
+      return all.group_by { |x| x.ran_at.month } unless sensor
+      return where(sid: sensor.sid).group_by { |x| x.ran_at.month }
     else
-      return collection.group_by { |x| x.ran_at.day } unless sensor
-      return collection.all(:sid => sensor.sid).group_by { |x| x.ran_at.day }
+      return all.group_by { |x| x.ran_at.day } unless sensor
+      return where(sid: sensor.sid).group_by { |x| x.ran_at.day }
     end
   end
 

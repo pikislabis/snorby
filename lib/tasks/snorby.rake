@@ -15,30 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
-require "./lib/snorby/dm/types"
-require "./lib/snorby/jobs"
 require "./lib/snorby/worker"
 
 namespace :snorby do
 
-  desc 'Setup'  
+  desc 'Setup'
   task :setup => :environment do
-        
+
     Rake::Task['secret'].invoke
-    
+
     # Create the snorby database if it does not currently exist
     Rake::Task['db:create'].invoke
-    
-    # Snorby update logic 
+
+    # Snorby update logic
     Rake::Task['snorby:update'].invoke
   end
-  
+
   desc 'Update Snorby'
   task :update => :environment do
 
     # Setup the snorby database
     Rake::Task['db:autoupgrade'].invoke
-    
+
     # Load Default Records
     Rake::Task['db:seed'].invoke
 
@@ -51,7 +49,7 @@ namespace :snorby do
 
     # Setup the snorby database
     Rake::Task['db:autoupgrade'].invoke
-    
+
     # Load Default Records
     Rake::Task['db:seed'].invoke
   end
@@ -67,7 +65,7 @@ namespace :snorby do
     if Snorby::Worker.running?
       exit 0
     end
-    
+
     # otherwise, restart worker.
     Rake::Task['snorby:restart_worker'].invoke
   end
@@ -82,10 +80,10 @@ namespace :snorby do
 
     count = 0
     stopped = false
-    while !stopped 
-      
+    while !stopped
+
       stopped = true unless Snorby::Worker.running?
-      sleep 5 
+      sleep 5
 
       count += 1
       if count > 10
@@ -100,13 +98,13 @@ namespace :snorby do
 
       puts "* Starting the Snorby worker process."
       Snorby::Worker.start
-      
+
       count = 0
       ready = false
-      while !ready 
-        
+      while !ready
+
         ready = true if Snorby::Worker.running?
-        sleep 5 
+        sleep 5
 
         count += 1
         if count > 10
@@ -126,10 +124,10 @@ namespace :snorby do
     end
 
   end
-  
+
   desc 'Soft Reset - Reset Snorby metrics'
   task :soft_reset => :environment do
-    
+
     # Reset Counter Cache Columns
     puts 'Reseting Snorby metrics and counter cache columns'
     Severity.update!(:events_count => 0)
@@ -139,16 +137,49 @@ namespace :snorby do
     puts 'This could take awhile. Please wait while the Snorby cache is rebuilt.'
     Snorby::Worker.reset_cache(:all, true)
   end
-  
+
   desc 'Hard Reset - Rebuild Snorby Database'
   task :hard_reset => :environment do
-    
+
     # Drop the snorby database if it exists
     Rake::Task['db:drop'].invoke
-    
+
     # Invoke the snorby:setup rake task
     Rake::Task['snorby:setup'].invoke
-    
   end
-  
+
+  # TODO: improve to execute only one UPDATE per cache.
+  desc 'Migrate to Rails 4 and ActiveRecord'
+  task :migrate_to_rails4 => :environment do
+    @adapter ||= ActiveRecord::Base.connection
+
+    Cache.all.each do |cache|
+      unless cache.src_ips.is_a?(Hash)
+        src_ips = Marshal.load(Base64.decode64(cache.src_ips))
+        @adapter.execute("UPDATE caches SET src_ips = '#{YAML::dump(src_ips)}' WHERE caches.id = #{cache.id}")
+      end
+
+      unless cache.dst_ips.is_a?(Hash)
+        dst_ips = Marshal.load(Base64.decode64(cache.dst_ips))
+        @adapter.execute("UPDATE caches SET dst_ips = '#{YAML::dump(dst_ips)}' WHERE caches.id = #{cache.id}")
+      end
+
+      unless cache.signature_metrics.is_a?(Hash)
+        signature_metrics = Marshal.load(Base64.decode64(cache.signature_metrics))
+        @adapter.execute("UPDATE caches SET signature_metrics = '#{YAML::dump(signature_metrics)}' WHERE caches.id = #{cache.id}")
+      end
+
+      unless cache.severity_metrics.is_a?(Hash)
+        severity_metrics = Marshal.load(Base64.decode64(cache.severity_metrics))
+        @adapter.execute("UPDATE caches SET severity_metrics = '#{YAML::dump(severity_metrics)}' WHERE caches.id = #{cache.id}")
+      end
+    end
+
+    Setting.all.each do |setting|
+      next if setting.value.nil?
+      value = Marshal.load(Base64.decode64(setting.value))
+      setting.update(value: value)
+    end
+  end
+
 end

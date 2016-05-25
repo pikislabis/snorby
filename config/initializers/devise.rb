@@ -12,7 +12,7 @@ Devise.setup do |config|
   # Load and configure the ORM. Supports :active_record (default) and
   # :mongoid (bson_ext recommended) by default. Other ORMs may be
   # available as additional gems.
-  require 'devise/orm/data_mapper'
+  require 'devise/orm/active_record'
 
   # ==> Configuration for any authentication mechanism
   # Configure which keys are used when authenticating an user. By default is
@@ -43,7 +43,7 @@ Devise.setup do |config|
   # from others authentication tools as :clearance_sha1, :authlogic_sha512 (then
   # you should set stretches above to 20 for default behavior) and :restful_authentication_sha1
   # (then you should set stretches to 10, and copy REST_AUTH_SITE_KEY to pepper)
-  config.encryptor = :bcrypt
+  #config.encryptor = :bcrypt
 
   # Setup a pepper to generate the encrypted password.
   config.pepper = "f5c0f3c477c5d0dfb1bb4b6037ebc3bc216e7d6dfb06079d4bf096869c33c4b0ac7ef688ce69ec81752542947b20f5012634bafbc03a1901c2521c3e9a2fcf18"
@@ -51,10 +51,10 @@ Devise.setup do |config|
   # ==> Configuration for :confirmable
   # The time you want to give your user to confirm his account. During this time
   # he will be able to access your application without confirming. Default is nil.
-  # When confirm_within is zero, the user won't be able to sign in without confirming. 
-  # You can use this to let your user access some features of your application 
-  # without confirming the account, but blocking it after a certain period 
-  # (ie 2 days). 
+  # When confirm_within is zero, the user won't be able to sign in without confirming.
+  # You can use this to let your user access some features of your application
+  # without confirming the account, but blocking it after a certain period
+  # (ie 2 days).
   # config.confirm_within = 2.days
 
   # ==> Configuration for :rememberable
@@ -62,7 +62,7 @@ Devise.setup do |config|
   config.remember_for = 2.weeks
 
   # If true, a valid remember token can be re-used between multiple browsers.
-  config.remember_across_browsers = true
+  #config.remember_across_browsers = true
 
   # If true, extends the user's remember period when remembered via cookie.
   # config.extend_remember_period = false
@@ -113,7 +113,7 @@ Devise.setup do |config|
   # devise role declared in your routes.
   # config.default_scope = :user
 
-  # Configure sign_out behavior. 
+  # Configure sign_out behavior.
   # By default sign_out is scoped (i.e. /users/sign_out affects only :user scope).
   # In case of sign_out_all_scopes set to true any logout action will sign out all active scopes.
   # config.sign_out_all_scopes = false
@@ -130,7 +130,7 @@ Devise.setup do |config|
   # If you want to use other strategies, that are not (yet) supported by Devise,
   # you can configure them inside the config.warden block. The example below
   # allows you to setup OAuth, using http://github.com/roman/warden_oauth
-  
+
   # config.warden do |manager|
   #   manager.oauth(:twitter) do |twitter|
   #     twitter.consumer_secret = <YOUR CONSUMER SECRET>
@@ -139,9 +139,9 @@ Devise.setup do |config|
   #   end
   #   manager.default_strategies(:scope => :user).unshift :twitter_oauth
   # end
-  
-  
-  if Snorby::CONFIG[:authentication_mode] == "cas"  
+
+
+  if Snorby::CONFIG[:authentication_mode] == "cas"
     config.cas_base_url = Snorby::CONFIG[:cas_config]["base_url"]
 
     # you can override these if you need to, but cas_base_url is usually enough
@@ -149,5 +149,5 @@ Devise.setup do |config|
     config.cas_logout_url = Snorby::CONFIG[:cas_config]["logout_url"]
     # config.cas_validate_url = "https://cas.myorganization.com/serviceValidate"
   end
-  
+
 end

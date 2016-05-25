@@ -3,7 +3,7 @@ class SensorsController < ApplicationController
   before_filter :require_administrative_privileges, :except => [:index, :destroy]
 
   def agents
-    @sensors ||= Sensor.all.page(params[:page].to_i, :per_page => @current_user.per_page_count, :order => [:sid.asc])
+    @sensors ||= Sensor.all.page(params[:page].to_i, per_page: @current_user.per_page_count, :order => [:sid.asc])
     respond_to do |format|
       format.html {render :layout => true}
       format.js { render :json => @sensors }
@@ -19,10 +19,10 @@ class SensorsController < ApplicationController
   end
 
   def index
-    @sensors ||= Sensor.all.page(params[:page].to_i, :per_page => @current_user.per_page_count, :order => [:sid.asc])
-    
+    @sensors ||= Sensor.all.paginate(page: (params[:page] || 1).to_i, per_page: @current_user.per_page_count).order('sid ASC')
+
     respond_to do |format|
-      format.html {render :layout => true}
+      format.html { render layout: true }
       format.js
     end
   end
@@ -40,7 +40,7 @@ class SensorsController < ApplicationController
   		redirect_to sensors_path, :flash => { :error => "There was an unknown error when attempting to delete the sensor" }
   	end
   end
-  
+
   def update_name
     @sensor = Sensor.get(params[:id])
     @sensor.update!(:name => params[:name]) if @sensor

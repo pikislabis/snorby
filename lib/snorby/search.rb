@@ -79,7 +79,7 @@ module Snorby
 
     BUILD = {
       :or => {
-        :event => { 
+        :event => {
           :sql => DO_OR.call(false),
           :process => DEFAULT_PROCESS
         },
@@ -87,19 +87,19 @@ module Snorby
           :sql => DO_OR.call(TCP),
           :process => DEFAULT_PROCESS,
         },
-        :udp => { 
+        :udp => {
           :sql => DO_OR.call(UDP),
           :process => DEFAULT_PROCESS
         },
-        :signature => { 
+        :signature => {
           :sql => DO_OR.call(SIGNATURE),
           :process => DEFAULT_PROCESS
         },
-        :sensor => { 
+        :sensor => {
           :sql => DO_OR.call(SENSOR),
           :process => DEFAULT_PROCESS
         },
-        :payload => { 
+        :payload => {
           :sql => DO_OR.call(PAYLOAD),
           :process => lambda do |data|
             convert_values = []
@@ -111,7 +111,7 @@ module Snorby
             convert_values
           end
         },
-        :ip => { 
+        :ip => {
           :sql => DO_OR.call(IP),
           :process => lambda do |data|
             tmp = []
@@ -127,11 +127,11 @@ module Snorby
         }
       },
       :and => {
-        :event => { 
+        :event => {
           :sql => "",
           :process => DEFAULT_PROCESS
         },
-        :tcp => { 
+        :tcp => {
           :sql => TCP,
           :process => DEFAULT_PROCESS
         },
@@ -202,10 +202,10 @@ module Snorby
       [
         :event,
         :signature,
-        :payload, 
-        :ip, 
+        :payload,
+        :ip,
         :sensor,
-        :tcp, 
+        :tcp,
         :udp
       ]
     end
@@ -232,7 +232,7 @@ module Snorby
       end
 
       @params = params
-      
+
       self.build_logic
       self.perform(page)
     end
@@ -419,7 +419,7 @@ module Snorby
                   operator = :gt
                   value = 0
                 end
-                
+
               end
             end
 
@@ -448,11 +448,11 @@ module Snorby
     end
 
     def self.json
-      @signatures ||= Signature.all(:fields => [:sig_name, :sig_id])
-      @classifications ||= Classification.all(:fields => [:name, :id])
-      @users ||= User.all(:fields => [:name, :id])
-      @sensors ||= Sensor.all(:fields => [:name, :sid])
-      @severities ||= Severity.all(:fields => [:name, :sig_id])
+      @signatures ||= Signature.select(:sig_name, :sig_id)
+      @classifications ||= Classification.select(:name, :id)
+      @users ||= User.select(:name, :id)
+      @sensors ||= Sensor.select(:name, :sid)
+      @severities ||= Severity.select(:name, :sig_id)
 
       @json ||= {
         :operators => {

@@ -2,13 +2,13 @@
 
 	<%= menu_item "Add Lookup Source", new_lookup_path, 'icons/add.png' %>
 	<%= render :partial => 'settings/menu' %>
-	
+
 <%- end -%>
 
 <div id="lookups" class='grid_12 page boxit'>
-	
+
 	<table class='default' border="0" cellspacing="0" cellpadding="0">
-		<tr>		
+		<tr>
 			<th>Menu Title</th>
 			<th>URL</th>
 			<th>Edit</th>
@@ -19,7 +19,7 @@
 		</tbody>
 	</table>
 
-	<%= pager(@lookups, Snorby::CONFIG[:baseuri] + '/lookups') %>
-	
-</div>
+	<%#= pager(@lookups, Snorby::CONFIG[:baseuri] + '/lookups') %>
+	<%= will_paginate(@lookups) %>
 
+</div>

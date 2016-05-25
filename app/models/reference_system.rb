@@ -1,13 +1,11 @@
-class ReferenceSystem
+class ReferenceSystem < ActiveRecord::Base
 
-  include DataMapper::Resource
+  self.table_name = 'reference_system'
 
-  storage_names[:default] = "reference_system"
+  # property :ref_system_id, Serial, :key => true, :index => true, :min => 0
+  #
+  # property :ref_system_name, String
 
-  property :ref_system_id, Serial, :key => true, :index => true, :min => 0
-
-  property :ref_system_name, String
-
-  has n, :references, :parent_key => :ref_system_id, :child_key => [ :ref_system_id ]
+  has_many :references, :foreign_key => :ref_system_id, :primary_key => [ :ref_system_id ]
 
 end

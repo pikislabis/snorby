@@ -3,7 +3,9 @@ class ClassificationsController < ApplicationController
   before_filter :require_administrative_privileges
 
   def index
-    @classifications = Classification.all.page(params[:page].to_i, :per_page => @current_user.per_page_count, :order => [:id.asc])
+    @classifications = Classification.all
+      .paginate(page: (params[:page] || 1).to_i, per_page: @current_user.per_page_count)
+      .order('id ASC')
 
     respond_to do |format|
       format.html # index.html.erb

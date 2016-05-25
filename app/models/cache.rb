@@ -1,88 +1,77 @@
-class Cache
+class Cache < ActiveRecord::Base
 
-  include DataMapper::Resource
+  # property :id, Serial
+  #
+  # property :sid, Integer
+  #
+  # property :cid, Integer
+  #
+  # property :ran_at, ZonedTime
+  #
+  # property :event_count, Integer, :default => 0
+  #
+  # property :tcp_count, Integer, :default => 0
+  #
+  # property :udp_count, Integer, :default => 0
+  #
+  # property :icmp_count, Integer, :default => 0
+  #
+  # property :severity_metrics, Object
+  #
+  # property :signature_metrics, Object
+  #
+  # property :src_ips, Object
+  #
+  # property :dst_ips, Object
+  #
+  # # Define created_at and updated_at timestamps
+  # timestamps :at
+  # property :created_at, ZonedTime
+  # property :updated_at, ZonedTime
 
-  property :id, Serial
+  serialize :severity_metrics, Hash
+  serialize :signature_metrics, Hash
+  serialize :src_ips, Hash
+  serialize :dst_ips, Hash
 
-  property :sid, Integer
+  belongs_to :sensor, foreign_key: :sid, primary_key: :sid
 
-  property :cid, Integer
+  has_one :event, foreign_key: [ :sid, :cid ], primary_key: [ :sid, :cid ]
 
-  property :ran_at, ZonedTime
+  scope :last_month, -> { where('ran_at >= ? AND ran_at <= ?', (Time.zone.now - 2.months).beginning_of_month, (Time.zone.now - 2.months).end_of_month) }
 
-  property :event_count, Integer, :default => 0
+  scope :this_quarter, -> { where('ran_at >= ? AND ran_at <= ?',  Time.zone.now.beginning_of_quarter, Time.zone.now.end_of_quarter) }
 
-  property :tcp_count, Integer, :default => 0
+  scope :this_month, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_month, Time.zone.now.end_of_month) }
 
-  property :udp_count, Integer, :default => 0
+  scope :last_week, -> { where('ran_at >= ? AND ran_at <= ?', (Time.zone.now - 1.weeks).beginning_of_week, (Time.zone.now - 1.weeks).end_of_week) }
 
-  property :icmp_count, Integer, :default => 0
+  scope :this_week, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_week, Time.zone.now.end_of_week) }
 
-  property :severity_metrics, Object
+  scope :yesterday, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.yesterday.beginning_of_day, Time.zone.now.yesterday.end_of_day) }
 
-  property :signature_metrics, Object
+  scope :today, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_day, Time.zone.now.end_of_day) }
 
-  property :src_ips, Object
-
-  property :dst_ips, Object
-
-  # Define created_at and updated_at timestamps
-  timestamps :at
-  property :created_at, ZonedTime
-  property :updated_at, ZonedTime
-
-  belongs_to :sensor, :parent_key => :sid, :child_key => :sid
-
-  has 1, :event, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ]
-
-  def self.last_month
-    all(:ran_at.gte => (Time.zone.now - 2.months).beginning_of_month, :ran_at.lte => (Time.zone.now - 2.months).end_of_month)
-  end
-
-  def self.this_quarter
-    all(:ran_at.gte => Time.zone.now.beginning_of_quarter, :ran_at.lte => Time.zone.now.end_of_quarter)
-  end
-
-  def self.this_month
-    all(:ran_at.gte => Time.zone.now.beginning_of_month, :ran_at.lte => Time.zone.now.end_of_month)
-  end
-
-  def self.last_week
-    all(:ran_at.gte => (Time.zone.now - 1.weeks).beginning_of_week, :ran_at.lte => (Time.zone.now - 1.weeks).end_of_week)
-  end
-
-  def self.this_week
-    all(:ran_at.gte => Time.zone.now.beginning_of_week, :ran_at.lte => Time.zone.now.end_of_week)
-  end
-
-  def self.yesterday
-    all(:ran_at.gte => Time.zone.now.yesterday.beginning_of_day, :ran_at.lte => Time.zone.now.yesterday.end_of_day)
-  end
-
-  def self.today
-    all(:ran_at.gte => Time.zone.now.beginning_of_day, :ran_at.lte => Time.zone.now.end_of_day)
-  end
-
-  def self.last_24(first=nil,last=nil)
+  def self.last_24(first = nil, last = nil)
     current = Time.zone.now
     end_time = last ? last : current
     start_time = first ? first : current.yesterday
 
-    all(:ran_at.gte => start_time, :ran_at.lte => end_time)
+    where('ran_at >= ? AND ran_at <= ?', start_time, end_time)
   end
-  
+
   def self.cache_time
     if (time = get_last)
       return time.updated_at
     else
-      Time.zone.now 
+      Time.zone.now
     end
   end
 
-  def self.protocol_count(protocol, type=nil)
+  def self.protocol_count(protocol, type = nil)
     count = count_hash(type)
-    
-    @cache = cache_for_type(self, :hour)
+
+    @cache = cache_for_type(:hour)
 
     case protocol.to_sym
     when :tcp
@@ -102,10 +91,10 @@ class Cache
     count.values
   end
 
-  def self.severity_count(severity, type=nil)
-    count = count_hash(type)   
-    
-    @cache = cache_for_type(self, :hour)
+  def self.severity_count(severity, type = nil)
+    count = count_hash(type)
+
+    @cache = cache_for_type(:hour)
 
     case severity.to_sym
     when :high
@@ -132,18 +121,18 @@ class Cache
   end
 
   def self.get_last
-    first(:order => [:updated_at.desc])
+    all.order(updated_at: :desc).first
   end
 
-  def self.sensor_metrics(type=nil)
+  def self.sensor_metrics(type = nil)
     @metrics = []
 
-    Sensor.all(:limit => 5, :order => [:events_count.desc]).each do |sensor|
+    Sensor.all.limit(5).order(events_count: :desc).each do |sensor|
 
       if type == :custom
         count = {} #count_hash(type)
 
-        blah = self.all(:sid => sensor.sid).group_by do |x| 
+        blah = all.where(sid: sensor.sid).group_by do |x|
           time = x.ran_at
           "#{time.year}-#{time.month}-#{time.day}-#{time.hour}"
         end
@@ -152,8 +141,8 @@ class Cache
           count[hour] = data.map(&:event_count).sum
         end
 
-        @metrics << { 
-          :name => sensor.sensor_name, 
+        @metrics << {
+          :name => sensor.sensor_name,
           :data => count.values,
           :range => count.keys.collect {|x| "'#{x.split('-')[2]}'" }
         }
@@ -162,14 +151,14 @@ class Cache
 
         count = count_hash(type)
 
-        blah = self.all(:sid => sensor.sid).group_by { |x| "#{x.ran_at.day}-#{x.ran_at.hour}" }
+        blah = all.where(sid: sensor.sid).group_by { |x| "#{x.ran_at.day}-#{x.ran_at.hour}" }
 
         blah.each do |hour, data|
           count[hour] = data.map(&:event_count).sum
         end
 
-        @metrics << { 
-          :name => sensor.sensor_name, 
+        @metrics << {
+          :name => sensor.sensor_name,
           :data => count.values,
           :range => count.keys.collect {|x| "'#{x.split('-').last}'" }
         }
@@ -180,14 +169,13 @@ class Cache
     @metrics
   end
 
-  def self.src_metrics(limit=20)
+  def self.src_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = self.map(&:src_ips).compact
+    @cache = all.map(&:src_ips).compact
     count = 0
 
     @cache.each do |ip_hash|
-
       ip_hash.each do |ip, count|
         if @metrics.has_key?(ip)
           @metrics[ip] += count
@@ -202,18 +190,17 @@ class Cache
       @top << data
       count += 1
     end
-    
+
     @top
   end
 
-  def self.dst_metrics(limit=20)
+  def self.dst_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = self.map(&:dst_ips).compact
+    @cache = all.map(&:dst_ips).compact
     count = 0
 
     @cache.each do |ip_hash|
-
       ip_hash.each do |ip, count|
         if @metrics.has_key?(ip)
           @metrics[ip] += count
@@ -228,14 +215,14 @@ class Cache
       @top << data
       count += 1
     end
-    
+
     @top
   end
 
-  def self.signature_metrics(limit=20)
+  def self.signature_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = self
+    @cache = all
     count = 0
 
     @cache.map(&:signature_metrics).each do |data|
@@ -257,7 +244,7 @@ class Cache
       @top << data
       count += 1
     end
-    
+
     @top
   end
 
@@ -268,7 +255,7 @@ class Cache
       now = Time.zone.now
       # TODO
       # this will need to store the key as day/hour
-      
+
       Range.new(now.yesterday.to_i, now.to_i).step(1.hour) do |seconds_since_epoch|
         time = Time.zone.at(seconds_since_epoch)
         key = "#{time.day}-#{time.hour}"
@@ -279,7 +266,7 @@ class Cache
 
       if type == :custom
         time_start = Time.zone.now.yesterday.beginning_of_day.to_i
-        time_end =  Time.zone.now.yesterday.end_of_day.to_i  
+        time_end =  Time.zone.now.yesterday.end_of_day.to_i
 
         Range.new(time_start, time_end).step(1.day) do |seconds_since_epoch|
           time = Time.zone.at(seconds_since_epoch)
@@ -292,7 +279,7 @@ class Cache
           time_end =  Time.zone.now.end_of_day.to_i
         else
           time_start = Time.zone.now.yesterday.beginning_of_day.to_i
-          time_end =  Time.zone.now.yesterday.end_of_day.to_i  
+          time_end =  Time.zone.now.yesterday.end_of_day.to_i
         end
 
         Range.new(time_start, time_end).step(1.hour) do |seconds_since_epoch|
@@ -308,9 +295,9 @@ class Cache
     count
   end
 
-  def self.cache_for_type(collection, type=:hour, sensor=false)
-    return collection.group_by { |x| "#{x.ran_at.day}-#{x.ran_at.hour}" } unless sensor
-    return collection.all(:sid => sensor.sid).group_by do |x| 
+  def self.cache_for_type(type = :hour, sensor = false)
+    return all.group_by { |x| "#{x.ran_at.day}-#{x.ran_at.hour}" } unless sensor
+    return where(sid: sensor.sid).group_by do |x|
       "#{x.ran_at.day}-#{x.ran_at.hour}"
     end
   end

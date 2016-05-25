@@ -23,18 +23,18 @@ module Snorby
           :dst_ips => {},
           :signature_metrics => {}
         }
-        
+
         [
-          :severity_metrics, 
-          :src_ips, 
-          :dst_ips, 
+          :severity_metrics,
+          :src_ips,
+          :dst_ips,
           :signature_metrics
         ].each do |item|
-          
+
           records.collect { |x| x[item] }.inject do |x,y|
           merge = {}
           keys = x.merge(y).keys
-          
+
           keys.each do |key|
             if x.has_key?(key)
               merge[key] = y.has_key?(key) ? y[key] + x[key] : x[key]
@@ -83,7 +83,7 @@ module Snorby
         logit 'fetching severity metrics'
         metrics = {}
 
-        sql_severity.collect do |x| 
+        sql_severity.collect do |x|
           key = x['sig_priority'].to_i
           value = x['count(*)'].to_i
 
@@ -92,7 +92,7 @@ module Snorby
 
         metrics
       end
-      
+
       def fetch_signature_metrics(update_counter=true)
         logit 'fetching signature metrics'
         signature_metrics = {}
@@ -103,7 +103,7 @@ module Snorby
 
         signature_metrics
       end
-      
+
       def fetch_src_ip_metrics
         logit 'fetching src ip metrics'
         src_ips = {}
@@ -133,15 +133,15 @@ module Snorby
       end
 
       def db_adapter
-        @adapter ||= DataMapper.repository(:default).adapter
+        @adapter ||= ActiveRecord::Base.connection
       end
 
       #
       # DM db_select
       #
-      def db_select(sql, *args)
-        db_adapter.select(sql, *args)
-      end
+      # def db_select(sql, *args)
+      #   db_adapter.select(sql, *args)
+      # end
 
       #
       # DM db_execute
@@ -189,8 +189,8 @@ module Snorby
 
       def update_classification_count
         sql = %{
-          update classifications set events_count = (select count(*) 
-          from event where event.`classification_id` = classifications.id); 
+          update classifications set events_count = (select count(*)
+          from event where event.`classification_id` = classifications.id);
         }
 
         db_execute(sql)
@@ -198,7 +198,7 @@ module Snorby
 
       def update_signature_count
         sql = %{
-          update signature set events_count = (select count(*) 
+          update signature set events_count = (select count(*)
           from event where event.signature = signature.sig_id);
         }
 
@@ -207,20 +207,20 @@ module Snorby
 
       def has_timestamp_index?
         sql = %{
-          select * FROM information_schema.statistics 
+          select * FROM information_schema.statistics
           WHERE table_schema = '#{db_options["database"]}'
           AND table_name = 'event' AND index_name = 'index_timestamp_cid_sid' limit 1;
         }
-        !db_select(sql).empty?
+        !db_execute(sql).empty?
       end
 
       def has_caches_ran_at_index?
         sql = %{
-          select * FROM information_schema.statistics 
+          select * FROM information_schema.statistics
           WHERE table_schema = '#{db_options["database"]}'
           AND table_name = 'caches' AND index_name = 'index_caches_ran_at' limit 1;
         }
-        !db_select(sql).empty?
+        !db_execute(sql).empty?
       end
 
       def has_aggregated_events_view?
@@ -230,14 +230,14 @@ module Snorby
           WHERE table_schema = '#{db_options["database"]}'
           AND table_name = 'aggregated_events';
         }
-        !db_select(sql).empty?
+        !db_execute(sql).empty?
       end
 
       def has_event_id?
         sql = %{
           SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '#{db_options["database"]}' AND TABLE_NAME = 'event' AND COLUMN_NAME = 'id';
         }
-        !db_select(sql).empty?
+        !db_execute(sql).empty?
       end
 
       def has_event_with_join_view?
@@ -247,7 +247,7 @@ module Snorby
           WHERE table_schema = '#{db_options["database"]}'
           AND table_name = 'events_with_join';
         }
-        !db_select(sql).empty?
+        !db_execute(sql).empty?
       end
 
       def validate_cache_indexes
@@ -283,12 +283,12 @@ module Snorby
       def sql_min_max
         sql = %{
           select min(cid), max(cid) from event USE INDEX (index_timestamp_cid_sid)
-          where 
-          timestamp >= '#{@stime.strftime("%Y-%m-%d %H:%M:%S")}' and timestamp < '#{@etime.strftime("%Y-%m-%d %H:%M:%S")}' 
+          where
+          timestamp >= '#{@stime.strftime("%Y-%m-%d %H:%M:%S")}' and timestamp < '#{@etime.strftime("%Y-%m-%d %H:%M:%S")}'
           and sid = #{@sensor.sid.to_i};
-        } 
+        }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def to_db_time(time)
@@ -297,114 +297,114 @@ module Snorby
 
       def sql_event_count
         sql = %{
-          select count(*) from event 
-          where sid = #{@sensor.sid.to_i} and timestamp >= '#{to_db_time(@stime)}' 
+          select count(*) from event
+          where sid = #{@sensor.sid.to_i} and timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}'
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def sql_signature
         sql = %{
           select signature, sig_name, c as `count(*)` from
-          (select signature,  count(*) as c from event  
-          join signature  on event.signature = signature.sig_id  
-          where timestamp >= '#{to_db_time(@stime)}' 
-          and timestamp < '#{to_db_time(@etime)}' 
+          (select signature,  count(*) as c from event
+          join signature  on event.signature = signature.sig_id
+          where timestamp >= '#{to_db_time(@stime)}'
+          and timestamp < '#{to_db_time(@etime)}'
           and sid = #{@sensor.sid.to_i}
-          group by signature) a 
+          group by signature) a
           inner join signature b on a.signature = b.sig_id
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
-      
+
       def sql_source_ip
         sql = %{
-          select INET_NTOA(ip_src), count(*) from event USE INDEX (index_timestamp_cid_sid) 
-          inner join iphdr on event.cid  = iphdr.cid 
-          and event.sid = iphdr.sid where timestamp >= '#{to_db_time(@stime)}' 
+          select INET_NTOA(ip_src), count(*) from event USE INDEX (index_timestamp_cid_sid)
+          inner join iphdr on event.cid  = iphdr.cid
+          and event.sid = iphdr.sid where timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}'
           and event.sid = #{@sensor.sid.to_i}
-          group by INET_NTOA(ip_src); 
+          group by INET_NTOA(ip_src);
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def sql_destination_ip
         sql = %{
           select INET_NTOA(ip_dst), count(*) from event USE INDEX (index_timestamp_cid_sid)
-          inner join iphdr on event.cid  = iphdr.cid 
-          and event.sid = iphdr.sid where timestamp >= '#{to_db_time(@stime)}' 
+          inner join iphdr on event.cid  = iphdr.cid
+          and event.sid = iphdr.sid where timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}'
           and event.sid = #{@sensor.sid.to_i}
-          group by INET_NTOA(ip_dst); 
+          group by INET_NTOA(ip_dst);
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def sql_severity
         sql = %{
-          select sig_priority, count(*) from event USE INDEX (index_timestamp_cid_sid) 
-          inner join signature on event.signature = signature.sig_id 
-          where timestamp >= '#{to_db_time(@stime)}' 
+          select sig_priority, count(*) from event USE INDEX (index_timestamp_cid_sid)
+          inner join signature on event.signature = signature.sig_id
+          where timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}'
           and event.sid = #{@sensor.sid.to_i}
-          group by sig_priority; 
+          group by sig_priority;
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def sql_sensor
         sql = %{
-          select `sid`, count(*) from event   
-          where timestamp >= '#{to_db_time(@stime)}' 
+          select `sid`, count(*) from event
+          where timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}'
           and event.sid = #{@sensor.sid.to_i}
-          group by sid; 
+          group by sid;
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def sql_tcp
         sql = %{
           select count(*) from event  USE INDEX (index_timestamp_cid_sid)
-          inner join tcphdr on event.cid  = tcphdr.cid 
+          inner join tcphdr on event.cid  = tcphdr.cid
           and event.sid = tcphdr.sid
-          where timestamp >= '#{to_db_time(@stime)}' 
+          where timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}' and event.sid = #{@sensor.sid.to_i};
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def sql_udp
         sql = %{
           select count(*) from event USE INDEX (index_timestamp_cid_sid)
-          inner join udphdr on event.cid  = udphdr.cid 
+          inner join udphdr on event.cid  = udphdr.cid
           and event.sid = udphdr.sid
-          where timestamp >= '#{to_db_time(@stime)}' 
+          where timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}' and event.sid = #{@sensor.sid.to_i};
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def sql_icmp
         sql = %{
-          select count(*) from event USE INDEX (index_timestamp_cid_sid) 
-          inner join icmphdr on 
-          event.cid  = icmphdr.cid and event.sid = icmphdr.sid 
-          where timestamp >= '#{to_db_time(@stime)}' 
+          select count(*) from event USE INDEX (index_timestamp_cid_sid)
+          inner join icmphdr on
+          event.cid  = icmphdr.cid and event.sid = icmphdr.sid
+          where timestamp >= '#{to_db_time(@stime)}'
           and timestamp < '#{to_db_time(@etime)}' and event.sid = #{@sensor.sid.to_i};
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
       def latest_five_distinct_signatures
@@ -414,7 +414,7 @@ module Snorby
           ) as signature;
         }
 
-        db_select(sql)
+        db_execute(sql)
       end
 
     end

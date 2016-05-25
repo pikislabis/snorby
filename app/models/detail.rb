@@ -1,10 +1,7 @@
-class Detail
-  include DataMapper::Resource
-  
-  storage_names[:default] = "detail"
+class Detail < ActiveRecord::Base
+  self.table_name = 'detail'
 
-  property :detail_type, Serial, :key => true, :index => true, :min => 0
-  
-  property :detail_text, Text
-
+  # property :detail_type, Serial, :key => true, :index => true, :min => 0
+  #
+  # property :detail_text, Text
 end

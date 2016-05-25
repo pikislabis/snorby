@@ -5,7 +5,7 @@ class LookupsController < ApplicationController
   # GET /lookups
   # GET /lookups.xml
   def index
-    @lookups = Lookup.all.page(params[:page].to_i, :per_page => @current_user.per_page_count, :order => [:id.asc])
+    @lookups = Lookup.all.paginate(page: (params[:page] || 1).to_i, per_page: @current_user.per_page_count).order('id ASC')
 
     respond_to do |format|
       format.html # index.html.erb

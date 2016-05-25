@@ -1,5 +1,5 @@
 <% if current_user.admin %>
-	
+
 	<%= title "Listing Sensors" do -%>
 
 		<% if current_user.admin %>
@@ -15,9 +15,9 @@
 <% end %>
 
 <div id="sensors" class='boxit'>
-	
+
 	<table class='default' border="0" cellspacing="0" cellpadding="0">
-		<tr>		
+		<tr>
 			<th>ID</th>
 			<th>Name</th>
 			<th>Hostname</th>
@@ -33,6 +33,7 @@
 	</table>
 
 
-	<%= pager(@sensors, request.fullpath) %>
-	
+	<%#= pager(@sensors, request.fullpath) %>
+	<%= will_paginate(@sensors) %>
+
 </div>

@@ -7,10 +7,10 @@ module Snorby
       class CacheCompleted < Exception; end;
 
       def perform
-        Signal.trap("INT") do 
+        Signal.trap("INT") do
           if defined?(@cache)
             p @cache
-            @cache.destroy! 
+            @cache.destroy!
           end
 
           raise("DailyCacheJob Failed")
@@ -19,7 +19,7 @@ module Snorby
         Signal.trap("TERM") do
           if defined?(@cache)
             p @cache
-            @cache.destroy! 
+            @cache.destroy!
           end
 
           raise("DailyCacheJob Failed")
@@ -34,9 +34,9 @@ module Snorby
           if @sensor.daily_cache.first.blank?
 
              sensor_event = Event.first(:sid => @sensor.sid)
-        
+
              next if sensor_event.blank?
-             
+
              day_start =  sensor_event.timestamp.beginning_of_day
              day_end = sensor_event.timestamp.end_of_day
           else
@@ -85,7 +85,7 @@ module Snorby
           send_weekly_report if Setting.weekly?
           send_monthly_report if Setting.monthly?
           ReportMailer.daily_report.deliver if Setting.daily?
-           
+
         rescue PDFKit::NoExecutableError => e
           logit "#{e}"
         rescue => e
@@ -96,7 +96,7 @@ module Snorby
 
         # Autodrop Logic
         if Setting.autodrop?
-          
+
           logit "Dropping old events", false
 
           while Event.count > Setting.autodrop_count.value.to_i do
@@ -107,14 +107,14 @@ module Snorby
 
         Snorby::Jobs.daily_cache.destroy! if Snorby::Jobs.daily_cache?
 
-        Delayed::Job.enqueue(Snorby::Jobs::DailyCacheJob.new(false), 
-                             :priority => 1, 
+        Delayed::Job.enqueue(Snorby::Jobs::DailyCacheJob.new(false),
+                             :priority => 1,
                              :run_at => Time.now.tomorrow.beginning_of_day)
 
       rescue => e
         puts e
         puts e.backtrace
-        @cache.destroy! if defined?(@cache) 
+        @cache.destroy! if defined?(@cache)
       end
 
       def send_weekly_report
@@ -127,9 +127,14 @@ module Snorby
 
       def build_cache(day_start, day_end)
 
-        event = db_select(%{
-          select cid from event where timestamp >= '#{@stime.to_s(:db)}' 
-          and timestamp < '#{@etime.to_s(:db)}' and sid = #{@sensor.sid.to_i} 
+        # event = db_select(%{
+        #   select cid from event where timestamp >= '#{@stime.to_s(:db)}'
+        #   and timestamp < '#{@etime.to_s(:db)}' and sid = #{@sensor.sid.to_i}
+        #   order by timestamp desc limit 1
+        # })
+        event = db_execute(%{
+          select cid from event where timestamp >= '#{@stime.to_s(:db)}'
+          and timestamp < '#{@etime.to_s(:db)}' and sid = #{@sensor.sid.to_i}
           order by timestamp desc limit 1
         })
 

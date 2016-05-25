@@ -3,8 +3,8 @@
   <% @total_event_count ||= Event.count %>
 
 	<table class='default' border="0" cellspacing="0" cellpadding="0">
-		
-		<tr>		
+
+		<tr>
       <th>
         <%= sortable(:sig_priority, 'Sev.')%>
       </th>
@@ -16,15 +16,15 @@
       </th>
       <th></th>
 		</tr>
-		
+
 		<tbody class='signatures content'>
 			<%= render @signatures %>
 		</tbody>
-		
+
 	</table>
 
 
-	<%= pager(@signatures, Snorby::CONFIG[:baseuri] + '/signatures') %>
-	
-</div>
+	<%#= pager(@signatures, Snorby::CONFIG[:baseuri] + '/signatures') %>
+  <%= will_paginate @signatures %>
 
+</div>

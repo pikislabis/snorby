@@ -25,5 +25,6 @@
 
   </table>
 
-  <%= pager(@asset_names, Snorby::CONFIG[:baseuri] + '/asset_names') %>
+  <%#= pager(@asset_names, Snorby::CONFIG[:baseuri] + '/asset_names') %>
+  <%= will_paginate @asset_names %>
 </div>

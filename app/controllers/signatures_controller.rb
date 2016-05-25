@@ -32,25 +32,24 @@ class SignaturesController < ApplicationController
     @total ||= Event.count
 
     if params[:q]
-      render :json => {
-        :signatures => Signature.all(:sig_name.like => "%#{params[:q]}%", :limit => 50),
-        :total => @total
+      render json: {
+        signatures: Signature.where('sig_name like ?', "%#{params[:q]}%").limit(50),
+        total: @total
       }
     else
-      render :json => { signatures => [] }
+      render json: { signatures => [] }
     end
   end
 
   private
 
   def sort_column
-    return :events_count unless params.has_key?(:sort)
+    return :events_count unless params.key?(:sort)
     params[:sort].to_sym
   end
-  
+
   def sort_direction
     %w[asc desc].include?(params[:direction].to_s) ? params[:direction].to_sym : :desc
   end
 
 end
-

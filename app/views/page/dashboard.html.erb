@@ -6,8 +6,8 @@
 
 		<%= drop_down_item "Last Week", dashboard_path(:range => :last_week), nil, { :class => 'dashboard' } %>
 		<%= drop_down_item "Last Month", dashboard_path(:range => :last_month), nil, { :class => 'dashboard' } %>
-		
-		<%= drop_down_item "Export To PDF", 
+
+		<%= drop_down_item "Export To PDF",
 		dashboard_path(:range => params[:range] == 'today' ? 'now' : params[:range], :format => :pdf), nil, { :class => 'dashboard' } %>
 
   <%= drop_down_item "Force Cache Update", force_cache_path, nil, {
@@ -19,17 +19,17 @@
 <% end %>
 
 <div id='dashboard' class=''>
-	
+
 	<div class='main grid_9'>
-		
+
 		<div class='dashboard-menu'>
-      
+
 			<ul>
 
         <li class='<%= "active" if @range == 'last_24' %> add_tipsy' title="<%= time_range_title(:last_24) %>"><%= link_to "Last 24", dashboard_path(:range => :last_24) %></li>
-				
+
         <li class='<%= "active" if @range == 'today' %> add_tipsy' title="<%= time_range_title(:today) %>"><%= link_to "Today", dashboard_path(:range => :today) %></li>
-				
+
         <li class='<%= "active" if @range == 'yesterday' %> add_tipsy' title="<%= time_range_title(:yesterday) %>"><%= link_to "Yesterday", dashboard_path(:range => :yesterday) %></li>
 
         <% if @now.beginning_of_week.day == @now.day %>
@@ -37,18 +37,18 @@
         <% else %>
           <li class='<%= "active" if @range == 'week' %> add_tipsy' title="<%= time_range_title(:week) %>"><%= link_to "This Week", dashboard_path(:range => :week) %></li>
         <% end %>
-			  
+
         <% if @now.day == 1 %>
            <li class='<%= "active" if @range == 'last_month' %> add_tipsy' title="<%= time_range_title(:last_month) %>"><%= link_to "Last Month", dashboard_path(:range => :last_month) %></li>
         <% else %>
           <li class='<%= "active" if @range == 'month' %> add_tipsy' title="<%= time_range_title(:month) %>"><%= link_to "This Month", dashboard_path(:range => :month) %></li>
-        <% end %>	
-				
+        <% end %>
+
         <li class='<%= "active" if @range == 'quarter' %> add_tipsy' title="<%= time_range_title(:quarter) %>"><%= link_to "This Quarter", dashboard_path(:range => :quarter) %></li>
-				
+
 				<li class='<%= "active" if @range == 'year' %> add_tipsy' title="<%= time_range_title(:year) %>"><%= link_to "This Year", dashboard_path(:range => :year) %></li>
-				
-				<% if Snorby::Jobs.caching? %>
+
+				<% if DelayedJob.caching? %>
 					<% content_for :footer do %>
 						<script type="text/javascript">
 							setTimeout(function(){
@@ -60,7 +60,7 @@
             <i>Currently Caching <%= image_tag('icons/pager.gif', :size => '16x11') %></i>
           </li>
 				<% else %>
-				
+
 
           <li class='right last-cache-time'>
             <% if @last_cache.present? %>
@@ -68,17 +68,17 @@
             <% end %>
           </li>
 
-					
+
 				<% end %>
 
 			</ul>
 
 		</div>
-		
+
 		<div id='box-holder'>
 			<%= render 'severity_dashboard.html.erb' %>
 		</div>
-		
+
 		<div id="box-tabs">
 
 			<ul id="box-menu">
@@ -86,29 +86,29 @@
 				<li><%= link_to "Severities", '#', :class => 'show_severities_graph' %></li>
 				<li><%= link_to "Protocols", '#', :class => 'show_protocol_graph' %></li>
 				<li><%= link_to "Signatures", '#', :class => 'show_signature_graph' %></li>
-				
+
 				<li><%= link_to "Sources", '#', :class => 'show_source_ips_graph' %></li>
         <li><%= link_to "Destinations", '#', :class => 'show_destination_ips_graph' %></li>
-				
+
 			</ul>
 
 		</div>
-		
+
 		<%= render 'graph_dashboard.html.erb' %>
-		
+
 	</div>
-	
+
 	<div class='secondary grid_3 alpha'>
-	
+
 		<div class='dashboard-header'>
 			<span>Top 5 Sensor</span>
 		</div>
-		
+
 		<ul class='box-list'>
 			<% @sensors.each do |sensor| %>
 
-			<li><%= link_to truncate(sensor.sensor_name, :length => 30), results_path(:title => "#{sensor.sensor_name}", 
-        "match_all"=>"true", "search"=>{"sensor"=>{"column"=>"sensor", "operator"=>"is", "value"=> sensor.sid } }), :title => sensor.sensor_name %> 
+			<li><%= link_to truncate(sensor.sensor_name, :length => 30), results_path(:title => "#{sensor.sensor_name}",
+        "match_all"=>"true", "search"=>{"sensor"=>{"column"=>"sensor", "operator"=>"is", "value"=> sensor.sid } }), :title => sensor.sensor_name %>
 
         <span>
           <%= number_with_delimiter (sensor.events_count.zero? ? Event.count(:sid => sensor.sid) : sensor.events_count) %>
@@ -116,53 +116,53 @@
       </li>
 			<% end %>
 		</ul>
-	
+
 		<div class='dashboard-header'>
 			<span>Top 5 Active Users</span>
 		</div>
-		
+
 		<ul class='box-list'>
 			<% @favers.each do |user| %>
 			<li class='has-image'>
-				<%= image_tag(get_gravatar_uri(user.email), :size => '16x16', :class => 'avatar-small') %> 
-				<%= link_to truncate(user.name, :length => 30), results_path(:title => "#{truncate("Events Classified By " + user.name.to_s, :length => 60)}", 
-                "match_all"=>"true", "search"=>{"user"=>{"column"=>"user", "operator"=>"is", "value"=> user.id } }), :title => user.name %> 
+				<%= image_tag(get_gravatar_uri(user.email), :size => '16x16', :class => 'avatar-small') %>
+				<%= link_to truncate(user.name, :length => 30), results_path(:title => "#{truncate("Events Classified By " + user.name.to_s, :length => 60)}",
+                "match_all"=>"true", "search"=>{"user"=>{"column"=>"user", "operator"=>"is", "value"=> user.id } }), :title => user.name %>
 				<span><%= number_with_delimiter user.classify_count %></span>
 			</li>
 			<% end %>
 		</ul>
-		
+
 		<div class='dashboard-header'>
 			<span>Last 5 Unique Events</span>
 		</div>
-		
+
 		<ul class='box-list'>
 			<% @recent_events.each do |event| %>
         <li>
-          <%= link_to truncate(event.signature.name, :length => 28), results_path(:title => "#{truncate(event.signature.name, :length => 40)}", 
-                "match_all"=>"true", "search"=>{"sensor"=>{"column"=>"signature", "operator"=>"is", "value"=> event.signature.sig_id } }), :title => event.signature.name %> 
+          <%= link_to truncate(event.signature.name, :length => 28), results_path(:title => "#{truncate(event.signature.name, :length => 40)}",
+                "match_all"=>"true", "search"=>{"sensor"=>{"column"=>"signature", "operator"=>"is", "value"=> event.signature.sig_id } }), :title => event.signature.name %>
           <span>
             <%= number_with_delimiter (event.signature.events_count.zero? ? Event.count(:sig_id => event.signature.sig_id) : event.signature.events_count) %>
           </span>
         </li>
 			<% end %>
 		</ul>
-	
+
 		<div class='dashboard-header'>
 			<span>Analyst Classified Events</span>
 		</div>
-		
+
 		<ul class='box-list'>
 			<% @classifications.each do |classification| %>
-			
+
         <li>
-          <%= link_to truncate(classification.name, :length => 25), results_path(:title => "#{classification.name}", 
-          "match_all"=>"true", "search"=>{"sensor"=>{"column"=>"classification", "operator"=>"is", "value"=> classification.id } }), :title => classification.name %> 
+          <%= link_to truncate(classification.name, :length => 25), results_path(:title => "#{classification.name}",
+          "match_all"=>"true", "search"=>{"sensor"=>{"column"=>"classification", "operator"=>"is", "value"=> classification.id } }), :title => classification.name %>
           <span><%= number_with_delimiter classification.events_count %></span>
       </li>
 			<% end %>
 		</ul>
-	
+
 	</div>
-	
+
 </div>

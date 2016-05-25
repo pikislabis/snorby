@@ -6,27 +6,25 @@ Snorby::Application.configure do
   # since you don't have to restart the webserver when you make code changes.
   config.cache_classes = false
 
-  # Log error messages when you accidentally call methods on nil.
-  config.whiny_nils = true
+  # Do not eager load code on boot.
+  config.eager_load = false
 
-  # Show full error reports and disable caching
+  # Show full error reports and disable caching.
   config.consider_all_requests_local       = true
-  #config.action_view.debug_rjs             = true
   config.action_controller.perform_caching = false
 
+  # Don't care if the mailer can't send.
+  config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.default_url_options = { host: 'localhost:3000' }
   # Send mail to letter opener gem to open generated mails in a new window
   config.action_mailer.delivery_method = :letter_opener
 
-  # Don't care if the mailer can't send
-  config.action_mailer.raise_delivery_errors = true
+  # Raise an error on page load if there are pending migrations
+  config.active_record.migration_error = :page_load
 
   # Print deprecation notices to the Rails logger
   config.active_support.deprecation = :log
 
-  # Only use best-standards-support built into browsers
-  config.action_dispatch.best_standards_support = :builtin
-  
-  # config.threadsafe!
-  # config.dependency_loading = true
+  # Debug mode disables concatenation and preprocessing of assets.
+  config.assets.debug = true
 end
-

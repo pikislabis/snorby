@@ -2606,7 +2606,7 @@ jQuery(document).ready(function($) {
           url: baseuri + '/signatures/search',
           global: false,
           data: { q: value, authenticity_token: csrf },
-          type: "POST",
+          type: "GET",
           dataType: "json",
           cache: false,
           success: function(data) {
@@ -2959,6 +2959,3 @@ jQuery(document).ready(function($) {
   });
 
 });
-
-
-

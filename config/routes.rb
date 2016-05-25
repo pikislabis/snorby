@@ -14,11 +14,11 @@ Snorby::Application.routes.draw do
 
   resources :classifications
 
-  devise_for :users, :path_names => { :sign_in => 'login', 
-    :sign_out => 'logout', 
-    :sign_up => 'register' }, :controllers => { 
+  devise_for :users, :path_names => { :sign_in => 'login',
+    :sign_out => 'logout',
+    :sign_up => 'register' }, :controllers => {
       :registrations => "registrations",
-      :sessions => "sessions", 
+      :sessions => "sessions",
       :passwords => 'passwords'
     } do
     get "/login" => "devise/sessions#new"
@@ -47,26 +47,22 @@ Snorby::Application.routes.draw do
   end
 
   resources :signatures do
-
     collection do
       get :search
     end
-    
   end
 
-  resources :severities do
-  end
+  resources :severities
 
-
-  match '/dashboard', :controller => 'Page', :action => 'dashboard'
-  match '/search', :controller => 'Page', :action => 'search'
-  match '/results', :controller => 'Page', :action => 'results'
-  match '/force/cache', :controller => "Page", :action => 'force_cache'
-  match '/cache/status', :controller => "Page", :action => 'cache_status'
-  match '/search/json', :controller => "Page", :action => 'search_json'
+  get '/dashboard', controller: 'page', action: 'dashboard'
+  get '/search', controller: 'page', action: 'search'
+  get '/results', controller: 'page', action: 'results'
+  get '/force/cache', controller: 'page', action: 'force_cache'
+  get '/cache/status', controller: 'page', action: 'cache_status'
+  get '/search/json', controller: 'page', action: 'search_json'
 
   resources :saved_searches, :path => "/saved/searches" do
-    
+
     collection do
       post :title
       post :update
@@ -78,7 +74,7 @@ Snorby::Application.routes.draw do
     end
   end
 
-  match ':controller(/:action(/:sid/:cid))', :controller => 'Events'
+  get ':controller(/:action(/:sid/:cid))', :controller => 'events'
 
   resources :asset_names do
     member do
@@ -94,11 +90,11 @@ Snorby::Application.routes.draw do
   end
 
   resources :events do
-    
+
     resources :notes do
-      
+
     end
-    
+
     collection do
       get :sessions
       get :view
@@ -121,9 +117,9 @@ Snorby::Application.routes.draw do
       get :since
       get :activity
     end
-    
+
   end
-  
+
   resources :notes
 
   resources :users do

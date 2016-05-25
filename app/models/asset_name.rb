@@ -1,32 +1,27 @@
-require 'snorby/model'
+class AssetName < ActiveRecord::Base
+  validate :validate_asset_name
 
-class AssetName 
+  # property :id, Serial, :key => true
+  #
+  # property :ip_address, NumericIPAddr, :index => true, :min => 0,
+  #   :required => true, :default => 0
+  #
+  # property :name, String, :length => 1024, :required => true
+  #
+  # property :global, Boolean, :default => true
 
-  include DataMapper::Resource
-  validates_with_method :validate_asset_name
+  has_many :agent_asset_names
 
-  property :id, Serial, :key => true
-
-  property :ip_address, NumericIPAddr, :index => true, :min => 0, 
-    :required => true, :default => 0
-
-  property :name, String, :length => 1024, :required => true
-
-  property :global, Boolean, :default => true
-
-  has n, :agent_asset_names
-
-  has n, :sensors, :through => :agent_asset_names
+  has_many :sensors, through: :agent_asset_names
 
   def save_with_sensors(updated_sensors)
+    return false unless save!
 
-    return false unless self.save!
+    agent_asset_names.destroy!
 
-    self.agent_asset_names.destroy!  
- 
-   if updated_sensors && updated_sensors.length > 0
-      updated_sensors.each do |sensor| 
-         AgentAssetName.create(:sensor_sid => sensor.sid, :asset_name_id => self.id).save!
+    if updated_sensors && !updated_sensors.empty?
+      updated_sensors.each do |sensor|
+        AgentAssetName.create(sensor_sid: sensor.sid, asset_name_id: id).save!
       end
     end
 
@@ -34,15 +29,15 @@ class AssetName
   end
 
   def validate_asset_name
-    if !self.global && self.sensors.length == 0
-      return [ false, "Non-global asset_names must have at least one sensor." ]
+    if !global && sensors.empty?
+      return [false, 'Non-global asset_names must have at least one sensor.']
     end
 
     true
   end
 
-  def agent_ids_string 
-    sensors.map(&:sid).join(",")   
+  def agent_ids_string
+    sensors.map(&:sid).join(",")
   end
 
   def applies_to
@@ -64,18 +59,15 @@ class AssetName
     }
   end
 
-  def self.sorty(params={})
+  def self.sorty(params = {})
     sort = params[:sort]
     direction = params[:direction]
 
     page = {
-      :per_page => User.current_user.per_page_count
+      page: (params[:page] || 1).to_i,
+      per_page: User.current_user.per_page_count
     }
 
-    page.merge!(:order => sort.send(direction))
-
-    page(params[:page].to_i, page)
+    paginate(page).order(sort.to_sym => direction)
   end
 end
-
-

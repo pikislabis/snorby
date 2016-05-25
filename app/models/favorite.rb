@@ -1,31 +1,26 @@
-require 'snorby/model/counter'
-
-class Favorite
-  
-  include DataMapper::Resource
-  include Snorby::Model::Counter
+class Favorite < ActiveRecord::Base
 
   belongs_to :user
-  
-  belongs_to :event, :child_key => [ :sid, :cid ]
 
-  property :id, Serial, :index => true
+  belongs_to :event, :primary_key => [ :sid, :cid ], foreign_key: [ :sid, :cid ]
 
-  property :sid, Integer, :index => true
-  
-  property :cid, Integer, :index => true
-  
-  property :user_id, Integer, :index => true
+  # property :id, Serial, :index => true
+  #
+  # property :sid, Integer, :index => true
+  #
+  # property :cid, Integer, :index => true
+  #
+  # property :user_id, Integer, :index => true
 
-  after :create do
-    self.event.up(:users_count) if self.event
-    self.user.up(:favorites_count) if self.user
+  after_create do
+    self.event.increment(:users_count) if self.event
+    self.user.increment(:favorites_count) if self.user
   end
-  
-  before :destroy! do
+
+  before_destroy do
     puts 'in favorite down'
-    self.event.down(:users_count) if self.event
-    self.user.down(:favorites_count) if self.user
+    self.event.decrement(:users_count) if self.event
+    self.user.decrement(:favorites_count) if self.user
   end
 
 end
