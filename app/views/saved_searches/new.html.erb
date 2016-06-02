@@ -1,13 +1,13 @@
 <%= snorby_box("New Saved Search", false) do %>
 
   <div id='saved-search-form' class='boxit page'>
-    <%= form_for @search, :html => { :class => 'validate' } do |f| %>
-      
+    <%= form_for @search, url: saved_searches_path, :html => { :class => 'validate' } do |f| %>
+
       <%= error_messages_for(@search) %>
 
       <p>
         <%= f.label 'Search Title' %><br />
-        <%= f.text_field :title, :class => 'required', 
+        <%= f.text_field :title, :class => 'required',
           :style => "width: 400px;",
           :placeholder => 'Example: Web Attacks on port 8080', :autocomplete => :off %>
       </p>
@@ -19,7 +19,7 @@
       </p>
 
     <% end %>
-    
+
   </div>
 
   <%= snorby_box_footer do %>
@@ -30,4 +30,3 @@
   <% end %>
 
 <% end %>
-

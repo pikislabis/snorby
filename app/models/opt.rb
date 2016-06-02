@@ -2,6 +2,8 @@ class Opt < ActiveRecord::Base
 
   self.table_name = 'opt'
 
+  self.primary_keys = :sid, :cid, :optid
+
   belongs_to :sensor, :parent_key => [ :sid ], :child_key => [ :sid ], :required => true
 
   belongs_to :event, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ], :required => true

@@ -1,4 +1,4 @@
-<%= title "Listing Sessions <i>(#{number_with_delimiter(@events.pager.total)} unique unclassified sessions)</i>".html_safe, 'Listing Sessions' do -%>
+<%= title "Listing Sessions <i>(#{number_with_delimiter(@events.total_entries)} unique unclassified sessions)</i>".html_safe, 'Listing Sessions' do -%>
   <%= menu_item "Hotkeys", hotkey_events_path, 'events/keyboard.png', :class => 'snorbybox', :"data-width" => '753px' %>
 
 	<%= render :partial => 'events/menu' %>

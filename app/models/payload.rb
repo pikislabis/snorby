@@ -4,15 +4,17 @@ class Payload < ActiveRecord::Base
 
   self.table_name = 'data'
 
+  self.primary_keys = :sid, :cid
+
   # property :sid, Integer, :key => true, :index => true, :min => 0
   #
   # property :cid, Integer, :key => true, :index => true, :min => 0
   #
   # property :data_payload, Text
 
-  belongs_to :sensor, :parent_key => [ :sid ], :child_key => [ :sid ], :required => true
+  belongs_to :sensor, foreign_key: :sid, primary_key: :sid, required: true
 
-  belongs_to :event, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ], :required => true
+  belongs_to :event, foreign_key: [:sid, :cid], primary_key: [:sid, :cid], required: true
 
   def to_s
     Snorby::Payload.new([data_payload].pack('H*'), :width => 26).to_s

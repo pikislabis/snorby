@@ -31,7 +31,7 @@ class EventsController < ApplicationController
   def sessions
     @session_view = true
 
-    params[:sort] = sort_column 
+    params[:sort] = sort_column
     params[:direction] = sort_direction
 
     sql = %{
@@ -51,7 +51,7 @@ class EventsController < ApplicationController
       "a.#{params[:sort]}"
     end
 
-    sql += "order by #{sort} #{params[:direction]} limit ? offset ?"
+    sql += "order by #{sort} #{params[:direction]}"
 
     @events = Event.sorty(params, [sql], "select count(*) from aggregated_events;")
 
@@ -64,12 +64,12 @@ class EventsController < ApplicationController
         :events => @events.map(&:detailed_json),
         :classifications => @classifications,
         :pagination => {
-          :total => @events.pager.total,
-          :per_page => @events.pager.per_page,
-          :current_page => @events.pager.current_page,
-          :previous_page => @events.pager.previous_page,
-          :next_page => @events.pager.next_page,
-          :total_pages => @events.pager.total_pages
+          :total => @events.total_entries,
+          :per_page => @events.per_page,
+          :current_page => @events.current_page,
+          :previous_page => @events.previous_page,
+          :next_page => @events.next_page,
+          :total_pages => @events.total_pages
         }
       }}
     end
@@ -81,11 +81,16 @@ class EventsController < ApplicationController
     params[:classification_all] = true
     params[:user_events] = true
 
-    @events ||= current_user.events.sorty(params)
+    @events ||=
+      current_user.events.paginate(
+        page: (params[:page] || 1).to_i,
+        per_page: @current_user.per_page_count
+      )
+
     @classifications ||= Classification.all
 
     respond_to do |format|
-      format.html {render :layout => true}
+      format.html { render layout: true }
       format.js
       format.json {render :json => {
         :events => @events.map(&:detailed_json),
@@ -113,7 +118,7 @@ class EventsController < ApplicationController
   end
 
   def rule
-    @event = Event.get(params['sid'], params['cid'])
+    @event = Event.find_by(sid: params['sid'], cid: params['cid'])
     @event.rule ? @rule = @event.rule : @rule = 'No rule found for this event.'
 
     respond_to do |format|
@@ -126,11 +131,11 @@ class EventsController < ApplicationController
       @session_view = true
     end
 
-    @event = Event.get(params['sid'], params['cid'])
+    @event = Event.find_by(sid: params['sid'], cid: params['cid'])
     @lookups ||= Lookup.all
 
-    @notes = @event.notes.all.page(params[:page].to_i,
-                                   :per_page => 5, :order => [:id.desc])
+    @notes = @event.notes.all.paginate(page: (params[:page] || 1).to_i,
+                                       per_page: 5).order(id: :desc)
 
     respond_to do |format|
       format.html {render :layout => false}
@@ -146,15 +151,16 @@ class EventsController < ApplicationController
       format.csv { render :text => @event.to_csv }
       format.json { render :json => {
         :event => @event.in_json,
-        :notes => @notes.map(&:in_json) 
+        :notes => @notes.map(&:in_json)
       }}
     end
   end
 
   def view
-    @events = Event.all(:sid => params['sid'],
-    :cid => params['cid']).page(params[:page].to_i,
-    :per_page => @current_user.per_page_count, :order => [:timestamp.desc])
+    @events = Event.where(sid: params['sid'], cid: params['cid'])
+                   .paginate(page: (params[:page] || 1).to_i,
+                             per_page: @current_user.per_page_count)
+                   .order(timestamp: :desc)
 
     @classifications ||= Classification.all
   end
@@ -175,90 +181,46 @@ class EventsController < ApplicationController
   end
 
   def create_mass_action
-    @event = Event.get(params[:sid], params[:cid])
-    render :layout => false
+    @event = Event.find_by(sid: params[:sid], cid: params[:cid])
+    render layout: false
   end
 
   def mass_action
     options = {}
 
-    params[:reclassify] ? (reclassify = true) : (reclassify = false)
-
-    if params.has_key?(:sensor_ids)
-      if params[:sensor_ids].is_a?(Array)
-
-        params[:sensor_ids].each do |id|
-          options.merge!({
-            :"#{id}" => {
-              :column => :sid,
-              :operator => :is,
-              :value => id.to_i,
-              :enabled => true
-            }
-          })
-        end
-      end
-    end
-
-    unless params[:reclassify]
-      options.merge!({
-        :classification => {
-          :column => :classification,
-          :operator => :isnull,
-          :value => ''
-        }
-      })
-    end
-
-    if params[:use_sig_id]
-      options.merge!({
-        :"sigid" => {
-          :column => :signature,
-          :operator => :is,
-          :value => params[:sig_id].to_i,
-          :enabled => true
-        }
-      })
-    end
+    options[:sid] = params[:sensor_ids] if params.key?(:sensor_ids)
+    options[:classification_id] = nil unless params[:reclassify]
+    options[:signature] = params[:sig_id] if params[:use_sig_id]
 
     if params[:use_ip_src]
-      options.merge!({
-        :"use_ip_src" => {
-          :column => :source_ip,
-          :operator => :is,
-          :value => IPAddr.new(params[:ip_src].to_i,Socket::AF_INET),
-          :enabled => true
-        }
-      })
+      options[:iphdr] ||= {}
+      options[:iphdr][:ip_src] = params[:ip_src]
     end
 
     if params[:use_ip_dst]
-      options.merge!({
-        :"use_ip_dst" => {
-          :column => :destination_ip,
-          :operator => :is,
-          :value => IPAddr.new(params[:ip_dst].to_i,Socket::AF_INET),
-          :enabled => true
-        }
-      })
+      options[:iphdr] ||= {}
+      options[:iphdr][:ip_dst] = params[:ip_dst]
     end
 
     if options.empty?
-      render :js => "flash_message.push({type: 'error', message: 'Sorry," +
-        " Insufficient classification parameters submitted...'});flash();"
+      render js: "flash_message.push({type: 'error', message: 'Sorry, \
+                  Insufficient classification parameters submitted...'});flash();"
     else
 
-      sql = Snorby::Search.build("true", true, options)
-      ids = Event.get_collection_id_string(sql)
+      ids = Event.includes(:ip).where(options).map { |x| "#{x.sid}-#{x.cid}" }.join(',')
 
       if params[:jobqueue]
-        Delayed::Job.enqueue(Snorby::Jobs::MassClassification.new(ids, params[:classification_id], User.current_user.id))
+        Delayed::Job.enqueue(
+          Snorby::Jobs::MassClassification.new(
+            ids, params[:classification_id], User.current_user.id
+          )
+        )
       else
         Event.update_classification(ids, params[:classification_id], User.current_user.id)
       end
 
       respond_to do |format|
-        format.html { render :layout => false }
+        format.html { render layout: false }
         format.js
       end
     end
@@ -324,7 +286,7 @@ class EventsController < ApplicationController
   end
 
   def favorite
-    @event = Event.get(params[:sid], params[:cid])
+    @event = Event.find_by(sid: params[:sid], cid: params[:cid])
     @event.toggle_favorite
     render :json => { :favorite => @event.favorite? }
   end

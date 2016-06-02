@@ -16,11 +16,11 @@
         }, function() {
           rule.build(data.search);
 
-          $('#title-header').replaceWith('<div class="edit edit-search-title" id="title-header">'+sanitize data.title+'</div><span class="sub-title">(click to edit)</span>');
+          $('#title-header').replaceWith('<div class="edit edit-search-title" id="title-header">'+data.title+'</div><span class="sub-title">(click to edit)</span>');
 
           $('.edit-search-title').editable(baseuri + "/saved/searches/title", {
             height: '20px',
-            method: 'POST',
+            method: 'PUT',
             width: '180px',
             name: "title",
             indicator: '<img src="<%= Snorby::CONFIG[:baseuri] %>/images/icons/pager.gif">',
@@ -47,7 +47,7 @@
 
               $.ajax({
                 url: baseuri + '/saved/searches/'+data.id,
-                type: "POST",
+                type: "PUT",
                 dataType: "json",
                 global: false,
                 cache: false,
@@ -71,7 +71,7 @@
       };
     };
 
-    var rule = new SearchRule('<%= escape_javascript Snorby::Search.json.html_safe %>');
-    loadSavedSearch('<%= escape_javascript @search.to_json.html_safe %>');
+    var rule = new SearchRule('<%= escape_javascript(Snorby::Search.json.html_safe) %>');
+    loadSavedSearch('<%= escape_javascript(@search.to_json.html_safe) %>');
   });
 </script>

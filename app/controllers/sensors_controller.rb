@@ -11,7 +11,7 @@ class SensorsController < ApplicationController
   end
 
   def agent_list
-    @agents ||= Sensor.all(:order => [:sid.asc])
+    @agents ||= Sensor.all.order(sid: :asc)
     respond_to do |format|
       format.html {render :layout => true}
       format.json { render :json => @agents }

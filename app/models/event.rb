@@ -4,7 +4,7 @@ class Event < ActiveRecord::Base
   #
   # Cache Helpers
   #
-  include Snorby::Jobs::CacheHelper
+  extend Snorby::Jobs::CacheHelper
 
   # Included for the truncate helper method.
   extend ActionView::Helpers::TextHelper
@@ -13,6 +13,8 @@ class Event < ActiveRecord::Base
 
   self.table_name = 'event'
   self.inheritance_column = ''
+
+  self.primary_keys = :sid, :cid
 
   # property :sid, Integer, :key => true, :index => true, :min => 0
   #
@@ -83,18 +85,18 @@ class Event < ActiveRecord::Base
     # Note: Need to decrement Severity, Sensor and User Counts
   end
 
-  default_scope { order('sid ASC, cid ASC') }
+  default_scope { order(sid: :ASC, cid: :ASC) }
 
-   SORT = {
-    :sig_priority => 'signature',
-    :sid => 'event',
-    :ip_src => 'ip',
-    :ip_dst => 'ip',
-    :sig_name => 'signature',
-    :timestamp => 'event',
-    :user_count => 'event',
-    :number_of_events => 'event'
-  }
+  SORT = {
+    sig_priority: 'signature',
+    sid: 'event',
+    ip_src: 'ip',
+    ip_dst: 'ip',
+    sig_name: 'signature',
+    timestamp: 'event',
+    user_count: 'event',
+    number_of_events: 'event'
+  }.freeze
 
   def self.last_event_timestamp
     event = all.order(timestamp: :desc).first
@@ -146,17 +148,27 @@ class Event < ActiveRecord::Base
       sql, count = Snorby::Search.build(params[:match_all], false, params[:search])
 
       sql[0] += " order by #{sort} #{direction}"
-      sql[0] += " LIMIT ? OFFSET ?"
+      #sql[0] += " LIMIT ? OFFSET ?"
 
-      page(params[:page], {
-        per_page: (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i),
-        order: 'timestamp DESC'
-      }, sql, count)
+      paginate_by_sql(
+        sql,
+        page: params[:page],
+        per_page: page[:per_page]
+      )
+
+      # page(params[:page], {
+      #   per_page: (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i),
+      #   order: 'timestamp DESC'
+      # }, sql, count)
     else
 
       if sql
 
-        page(params[:page].to_i, page, sql, count);
+        paginate_by_sql(
+          sql[0],
+          page: params[:page],
+          per_page: page[:per_page]
+        )
 
       else
 
@@ -184,7 +196,7 @@ class Event < ActiveRecord::Base
           end
         end
 
-        page(params[:page].to_i, page)
+        paginate(page: (params[:page] || 1).to_i, per_page: page[:per_page])
       end
 
     end
@@ -225,8 +237,8 @@ class Event < ActiveRecord::Base
     Delayed::Job.enqueue(Snorby::Jobs::AlertNotifications.new(self.sid, self.cid))
   end
 
-  def self.limit(limit=25)
-    all(:limit => limit)
+  def self.limit(limit = 25)
+    all.limit(limit)
   end
 
   # TODO
@@ -280,65 +292,63 @@ class Event < ActiveRecord::Base
         :order => [:timestamp.desc])
   end
 
-  def self.get_collection_id_string(q)
-    sql = q.first
-    count = q.last
-
-    sql.push(999999999, 0)
-    [db_select(sql.first, *(sql.shift; sql)).map {|x| "#{x.sid}-#{x.cid}" }.join(','), db_select(count.first, *(count.shift; count)).first.to_i]
-  end
-
-  def self.update_classification_by_session(ids, classification, user_id=nil)
+  def self.update_classification_by_session(ids, classification, user_id = nil)
     event_count = 0
 
     @classification = if classification.to_i.zero?
-      "NULL"
-    else
-      Classification.get(classification.to_i).id
-    end
+                        'NULL'
+                      else
+                        Classification.find(classification.to_i).id
+                      end
 
     uid = if user_id
-      user_id
-    else
-      User.current_user.id
-    end
+            user_id
+          else
+            User.current_user.id
+          end
 
     if @classification
-      update = "UPDATE `events_with_join` as event SET `classification_id` = #{@classification}, `user_id` = #{uid} WHERE "
-      event_data = ids.split(',');
-      sql = "select * from events_with_join as event where "
+      update = "UPDATE event SET `classification_id` = #{@classification}, \
+                `user_id` = #{uid} WHERE "
+      event_data = ids.split(',')
+      sql = 'select * from event where '
       events = []
 
-      event_data.each_with_index do |e, index|
+      event_data.each do |e|
         event = e.split('-')
         event_count += 1
 
-        events.push("(`sid` = #{event.first.to_i} and `cid` = #{event.last.to_i})")
+        events.push("(sid = #{event.first.to_i} and cid = #{event.last.to_i})")
       end
 
       sql += events.join(' OR ')
-      @events = db_select(sql)
+      @events = Event.find_by_sql(sql)
 
       classification_sql = []
       @events.each do |event|
-        classification_sql.push "(classification_id is NULL AND signature = #{event.signature} AND ip_src = #{event.ip_src} AND ip_dst = #{event.ip_dst} AND sid = #{event.sid})"
+        classification_sql.push("(classification_id is NULL AND \
+                                  sid = #{event.sid} AND cid = #{event.cid})")
       end
 
-      tmp = update += classification_sql.join(" OR ")
+      tmp = update + classification_sql.join(' OR ')
+
       db_execute(tmp)
-      db_execute("update classifications set events_count = (select count(*) from event where event.`classification_id` = classifications.id);")
+      db_execute("update classifications \
+                  set events_count = (select count(*) \
+                  from event \
+                  where event.`classification_id` = classifications.id);")
 
       event_count
     end
   end
 
-  def self.update_classification(ids, classification, user_id=nil)
+  def self.update_classification(ids, classification, user_id = nil)
     event_count = 0
 
     @classification = if classification.to_i.zero?
       "NULL"
     else
-      Classification.get(classification.to_i)
+      Classification.find(classification.to_i)
     end
 
     uid = if user_id
@@ -399,7 +409,7 @@ class Event < ActiveRecord::Base
     return events
   end
 
-  def id
+  def data_id
     "#{sid}-#{cid}"
   end
 
@@ -515,7 +525,7 @@ class Event < ActiveRecord::Base
   end
 
   def favorite?
-    return true if User.current_user.events.include?(self)
+    return true if User.current_user.events.to_a.include?(self)
     false
   end
 
@@ -532,7 +542,7 @@ class Event < ActiveRecord::Base
   end
 
   def destroy_favorite
-    favorite = User.current_user.favorites.first(:sid => self.sid, :cid => self.cid)
+    favorite = User.current_user.favorites.find_by(sid: self.sid, cid: self.cid)
     favorite.destroy! if favorite
   end
 

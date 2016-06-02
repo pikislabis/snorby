@@ -2,6 +2,8 @@ class Ip < ActiveRecord::Base
 
   self.table_name = 'iphdr'
 
+  self.primary_keys = :sid, :cid
+
   # property :sid, Integer, :key => true, :index => true
   #
   # property :cid, Integer, :key => true, :index => true
@@ -42,16 +44,23 @@ class Ip < ActiveRecord::Base
   # property :ip_csum, Integer, :lazy => true, :min => 0, :required => true,
   #          :default => 0
 
-  belongs_to :sensor, :parent_key => [ :sid ], :child_key => [ :sid ],
-                      :required => true
+  belongs_to :sensor, foreign_key: [ :sid ], primary_key: [ :sid ],
+                      required: true
 
-  has_many :events, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ],
-                    :dependent => :destroy
+  has_many :events, foreign_key: [ :sid, :cid ], primary_key: [ :sid, :cid ],
+                    dependent: :destroy
+
+  def ip_src
+    IPAddr.new(super, Socket::AF_INET)
+  end
+
+  def ip_dst
+    IPAddr.new(super, Socket::AF_INET)
+  end
 
   def src_asset_name
-
     RequestStore.store[:assets] ||= {}
-    matches =  RequestStore.store[:assets].fetch("#{self.sid}_#{self.ip_src.to_i}", nil)
+    matches = RequestStore.store[:assets].fetch("#{sid}_#{ip_src.to_i}", nil)
     return matches if matches
 
     sql = %{
@@ -66,7 +75,7 @@ class Ip < ActiveRecord::Base
 
     matches = AssetName.find_by_sql([sql, self.sid, self.ip_src.to_i])
     if matches
-      RequestStore.store[:assets]["#{self.sid}_#{self.ip_src.to_i}"] = matches.first
+      RequestStore.store[:assets]["#{sid}_#{ip_src.to_i}"] = matches.first
       return matches.first
     else
       nil

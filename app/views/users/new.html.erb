@@ -4,7 +4,7 @@
 
     <div id='settings' class='boxit page'>
 
-      <%= form_for(@user, :url => add_users_path(@user), :html => { :method => :put, :multipart => true, :class => 'basic-form validate' }) do |f| %>
+      <%= form_for(@user, url: add_users_path(@user), html: { method: :post, class: 'basic-form validate' }) do |f| %>
 
         <%= error_messages_for(@user) %>
 
@@ -89,16 +89,16 @@
 
         <%= form_actions do %>
 
-          <%= button "Update Settings", :class => 'success' %>
+          <%= button "Create User", class: 'success' %>
 
-          <%= button "Cancel", :class => 'warning limp-box-close' %>
+          <%= button "Cancel", class: 'warning limp-box-close' %>
 
         <% end %>
 
       <% end %>
 
     </div>
-      
+
   </div>
 
 <% end %>

@@ -27,7 +27,9 @@ class SavedSearch < ActiveRecord::Base
 
   validates_uniqueness_of :checksum
 
-  before_valid? :set_checksum
+  before_validation :set_checksum
+
+  serialize :search, Hash
 
   before_create do
     set_checksum

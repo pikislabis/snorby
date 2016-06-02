@@ -1,64 +1,67 @@
 class SavedSearchesController < ApplicationController
-  
+
   def index
-    @searches = (SavedSearch.all(:user_id => @current_user.id) | SavedSearch.all(:public => true)).page(params[:page].to_i, :per_page => @current_user.per_page_count, :order => [:created_at])
+    @searches =
+      SavedSearch.where('user_id = ? OR public = ?', @current_user.id, true)
+                 .paginate(page: (params[:page] || 1).to_i, per_page: @current_user.per_page_count)
+                 .order(created_at: :ASC)
   end
-  
+
   def new
     @search = SavedSearch.new
-    render :layout => false
+    render layout: false
   end
-  
+
   def create
-    if params.has_key?(:search)
+    return unless params.key?(:search)
 
-      if params[:search].is_a?(String)
-        params[:search] = JSON.parse(params[:search])
-      end
+    params[:search] = JSON.parse(params[:search]) if params[:search].is_a?(String)
 
-      params[:search][:user_id] = @current_user.id
-      @search = SavedSearch.new(params[:search])
-      if @search.save
-        render :json => @search
-      else
-        render :json => { :error => @search.errors }
-      end
+    params[:search][:user_id] = @current_user.id
+
+    @search = SavedSearch.new(search_params)
+    @search.search = params[:search][:search]
+
+    if @search.save
+      render json: @search
+    else
+      render json: { error: @search.errors }
     end
   end
-  
+
   def show
     @search = SavedSearch.get(params[:id].to_i)
 
-    if @search 
-      if @current_user.id == @search.user.id or @search.public
-        render :json => @search
+    if @search
+      if @current_user.id == @search.user.id || @search.public
+        render json: @search
       else
-        render :json => {}
+        render json: {}
       end
     else
-      render :json => {}
+      render json: {}
     end
   end
 
   def view
-    @search = SavedSearch.get(params[:id].to_i)
+    @search = SavedSearch.find(params[:id].to_i)
 
-    if @search 
+    if @search
       redirect_to saved_searches_path unless @current_user.id == @search.user.id
     else
       redirect_to saved_searches_path
     end
   end
-  
+
   def edit
     @search = SavedSearch.get(params[:id])
   end
-  
+
   def update
-    @search = SavedSearch.get(params[:id])
+    @search = SavedSearch.find(params[:id])
 
     if @search && @current_user.id == @search.user.id
-      if params.has_key?(:search)
+      if params.key?(:search)
 
         if params[:search].is_a?(String)
           params[:search] = JSON.parse(params[:search])
@@ -82,31 +85,28 @@ class SavedSearchesController < ApplicationController
   end
 
   def title
-    @search = SavedSearch.get(params[:id])
+    @search = SavedSearch.find(params[:id])
 
-    if @search && @current_user.id == @search.user.id
-      @search.title = params[:title] if params.has_key?(:title)
+    return unless @search && @current_user.id == @search.user.id
 
-      if params.has_key?(:search)
+    @search.title = params[:title] if params.key?(:title)
 
-        if params[:search].is_a?(String)
-          params[:search] = JSON.parse(params[:search])
-        end
-
-        @search.search = params[:search]
+    if params.key?(:search)
+      if params[:search].is_a?(String)
+        params[:search] = JSON.parse(params[:search])
       end
-
-      if @search.save
-        render :text => @search.title
-      else
-        render :json => @search.errors
-      end
+      @search.search = params[:search]
     end
 
+    if @search.save
+      render text: @search.title
+    else
+      render json: @search.errors
+    end
   end
 
   def destroy
-    @search = SavedSearch.get(params[:id])
+    @search = SavedSearch.find(params[:id])
 
     respond_to do |format|
       if @search && @current_user.id == @search.user.id
@@ -121,5 +121,9 @@ class SavedSearchesController < ApplicationController
     end
   end
 
-end
+  private
 
+  def search_params
+    params.require(:search).permit(:title, :public, :user_id)
+  end
+end

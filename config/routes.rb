@@ -56,21 +56,20 @@ Snorby::Application.routes.draw do
 
   get '/dashboard', controller: 'page', action: 'dashboard'
   get '/search', controller: 'page', action: 'search'
-  get '/results', controller: 'page', action: 'results'
+  match '/results', controller: 'page', action: 'results', via: [:get, :post]
   get '/force/cache', controller: 'page', action: 'force_cache'
   get '/cache/status', controller: 'page', action: 'cache_status'
   get '/search/json', controller: 'page', action: 'search_json'
 
-  resources :saved_searches, :path => "/saved/searches" do
-
+  resources :saved_searches, path: '/saved/searches' do
     collection do
       post :title
-      post :update
+      put :update
     end
 
     member do
       get :view
-      post :update
+      put :update
     end
   end
 
@@ -130,11 +129,5 @@ Snorby::Application.routes.draw do
     end
   end
 
-  resources :page do
-    collection do
-      get :search
-      get :results
-    end
-  end
-
+  resources :page
 end

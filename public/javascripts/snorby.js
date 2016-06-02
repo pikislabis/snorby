@@ -930,7 +930,7 @@ var Snorby = {
         data: {
           sort:  params.sort || 'desc',
           direction: params.direction || 'timestamp',
-          page: params.page || 0
+          page: params.page || 1
         },
         global: false,
         type: 'get',
@@ -2778,7 +2778,7 @@ jQuery(document).ready(function($) {
       var search_public = $('input#saved_search_public').is(":checked");
 
      $.ajax({
-        url: baseuri + '/saved_searches/create',
+        url: baseuri + '/saved/searches',
         global: false,
         dataType: 'json',
         cache: false,

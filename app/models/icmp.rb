@@ -1,6 +1,8 @@
 class Icmp < ActiveRecord::Base
   self.table_name = 'icmphdr'
 
+  self.primary_keys = :sid, :cid
+
   belongs_to :sensor, foreign_key: :sid, primary_key: :sid,
                       required: true
 

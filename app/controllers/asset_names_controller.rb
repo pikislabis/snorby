@@ -36,14 +36,14 @@ class AssetNamesController < ApplicationController
         name = (items[1] || "").strip
         global = true
         sensor_name = nil
-        
+
         unless ip_address && name
           errors.push(line_number, "Incorrect format (IP and name required): #{line}")
           next
         end
 
         if items.length > 2
-          sensor_name = items[2].strip 
+          sensor_name = items[2].strip
           global = false if sensor_name.length > 0
         end
 
@@ -54,10 +54,10 @@ class AssetNamesController < ApplicationController
           next
         end
 
-        if global 
+        if global
 
           # if there's already a global name for ip_address
-          existing_name = AssetName.first(:ip_address => ip, :global => true)
+          existing_name = AssetName.find_by(ip_address: ip.to_i, global: true)
 
           if existing_name
             if overwrite
@@ -141,32 +141,27 @@ class AssetNamesController < ApplicationController
   end
 
   def update
-
     params[:ip_address] = IPAddr.new(params[:ip_address],Socket::AF_INET) if params[:ip_address]
 
-    @asset_name = if params[:id]
-       AssetName.find_or_create({ :id => params[:id] },
-            { :ip_address => params[:ip_address],
-              :name => params[:name],
-              :global => params[:global]
-            })
-    else
-      AssetName.find_or_create({
-        :ip_address => params[:ip_address],
-        :name => params[:name],
-        :global => params[:global]
-      },
-      { :ip_address => params[:ip_address],
-        :name => params[:name],
-        :global => params[:global]
-      })
-    end
+    @asset_name =
+      if params[:id]
+        AssetName.create_with(ip_address: params[:ip_address],
+                              name: params[:name],
+                              global: params[:global])
+                 .find_or_create_by(id: params[:id])
+      else
+        AssetName.find_or_create_by(
+          ip_address: params[:ip_address],
+          name: params[:name],
+          global: params[:global]
+        )
+      end
 
-    @asset_name.attributes = { :global => params[:global], :name => params[:name] }
-   
-    sensors = [] 
+    @asset_name.attributes = { global: params[:global], name: params[:name] }
+
+    sensors = []
     if params[:global] && params[:global].to_i == 1
-      
+
       if params[:id]
         AgentAssetName.all(:asset_name_id => params[:id]).destroy!
       end
@@ -175,7 +170,7 @@ class AssetNamesController < ApplicationController
     else
       if params[:sensors] && params[:sensors].try(:to_a)
         sensors = Sensor.all(:sid => params[:sensors]).to_a || []
-      end      
+      end
     end
 
     respond_to do |format|
@@ -207,7 +202,7 @@ class AssetNamesController < ApplicationController
 
   def remove
     @asset_name = AssetName.find_by_id(params[:id])
-    AgentAssetName.all(:asset_name_id => params[:id]).destroy!
+    AgentAssetName.where(asset_name_id: params[:id]).destroy_all
     @asset_name.destroy! if @asset_name
     render :layout => false, :json => @asset_name
   end

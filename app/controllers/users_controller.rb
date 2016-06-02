@@ -15,29 +15,37 @@ class UsersController < ApplicationController
   end
 
   def add
-    @user = User.create(params[:user])
+    @user = User.create(user_params)
     if @user.save
       redirect_to users_path
     else
-      render :action => 'new'
+      render action: 'new'
     end
   end
 
   def remove
     @user = User.get(params[:id])
     @user.destroy!
-    redirect_to users_path, :notice => "Successfully Delete User"
+    redirect_to users_path, notice: 'Successfully Delete User'
   end
 
   def toggle_settings
     @user = User.get(params[:user_id])
 
     if @user.update(params[:user])
-      render :json => {:success => 'User updated successfully.'}
+      render json: { success: 'User updated successfully.' }
     else
-      render :json => {:error => 'Error while changing user attributes.'}
+      render json: { error: 'Error while changing user attributes.' }
     end
 
+  end
+
+  private
+
+  def user_params
+    params.require(:user).permit(:name, :email, :password,
+                                 :password_confirmation, :per_page_count,
+                                 :timezone, :email_reports, :admin)
   end
 
 end

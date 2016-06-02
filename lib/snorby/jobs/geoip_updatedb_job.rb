@@ -1,7 +1,7 @@
 module Snorby
   module Jobs
     class GeoipUpdatedbJob < Struct.new(:verbose)
-      
+
       def perform
         uri = if Snorby::CONFIG.has_key?(:geoip_uri)
           URI(Snorby::CONFIG[:geoip_uri])
@@ -12,7 +12,7 @@ module Snorby
         resp = Net::HTTP.get_response(uri)
 
         gzip = lambda do |resp, file|
-          gz = Zlib::GzipReader.new(StringIO.new(resp.body.to_s)) 
+          gz = Zlib::GzipReader.new(StringIO.new(resp.body.to_s))
           file.write(gz.read)
         end
 
@@ -34,12 +34,12 @@ module Snorby
         if File.exists?("tmp/tmp-snorby-geoip.dat")
           FileUtils.mv('tmp/tmp-snorby-geoip.dat', 'config/snorby-geoip.dat', :force => true)
         end
-        
-        Snorby::Jobs.geoip_update.destroy! if Snorby::Jobs.geoip_update?
 
-        Delayed::Job.enqueue(Snorby::Jobs::GeoipUpdatedbJob.new(false), 
-                               :priority => 1, 
-                               :run_at => 1.week.from_now)
+        DelayedJob.geoip_update.destroy! if DelayedJob.geoip_update?
+
+        Delayed::Job.enqueue(Snorby::Jobs::GeoipUpdatedbJob.new(false),
+                             priority: 1,
+                             run_at: 1.week.from_now)
       rescue => e
         puts e
         puts e.backtrace

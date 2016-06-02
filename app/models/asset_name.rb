@@ -11,13 +11,16 @@ class AssetName < ActiveRecord::Base
   # property :global, Boolean, :default => true
 
   has_many :agent_asset_names
-
   has_many :sensors, through: :agent_asset_names
+
+  def ip_address
+    IPAddr.new(super, Socket::AF_INET)
+  end
 
   def save_with_sensors(updated_sensors)
     return false unless save!
 
-    agent_asset_names.destroy!
+    agent_asset_names.destroy_all
 
     if updated_sensors && !updated_sensors.empty?
       updated_sensors.each do |sensor|

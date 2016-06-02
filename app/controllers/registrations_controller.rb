@@ -1,6 +1,6 @@
 class RegistrationsController < Devise::RegistrationsController
 
-  before_filter :require_administrative_privileges, :only => [:create]
+  before_filter :require_administrative_privileges, only: [:create]
 
   def new
     build_resource({})
@@ -25,23 +25,28 @@ class RegistrationsController < Devise::RegistrationsController
   end
 
   def update
-    method = (Snorby::CONFIG[:authentication_mode] == "database") ? "update_with_password" :  "update"
-    if resource.send(method, params[resource_name])
+    method = if Snorby::CONFIG[:authentication_mode] == 'database'
+               'update_with_password'
+             else
+               'update'
+             end
 
-      if params[resource_name]['avatar'].blank?
-
-        resource.reprocess_avatar
-
-        set_flash_message :notice, :updated
-        redirect_to edit_user_registration_path
-      else
-        render :template => "users/registrations/crop"
-      end
-
+    if resource.send(method, user_params)
+      set_flash_message :notice, :updated
+      redirect_to edit_user_registration_path
     else
       clean_up_passwords(resource)
-      redirect_to edit_user_registration_path
+      render :edit
     end
   end
 
+  private
+
+  def user_params
+    attributes = [:name, :email, :accept_notes, :per_page_count, :timezone,
+                  :email_reports, :password, :password_confirmation,
+                  :current_password]
+    attributes << :admin if current_user.admin
+    params.require(:user).permit(attributes)
+  end
 end

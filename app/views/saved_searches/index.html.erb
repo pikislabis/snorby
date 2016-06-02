@@ -10,7 +10,7 @@
 
 <% else %>
 	<table class='default' border="0" cellspacing="0" cellpadding="0">
-		<tr>		
+		<tr>
       <th>Public</th>
 			<th>Title</th>
       <th>Author</th>
@@ -23,9 +23,10 @@
 		</tbody>
 	</table>
 
-	<%= pager(@searches, Snorby::CONFIG[:baseuri] + '/saved/searches') %>
+	<%#= pager(@searches, Snorby::CONFIG[:baseuri] + '/saved/searches') %>
+  <%= will_paginate @searches %>
 <% end %>
-	
+
 </div>
 
 
@@ -42,7 +43,7 @@
     $('#searches').on('click', 'td.click', function(e) {
       e.preventDefault();
       var id = $(this).parents('tr').data('id');
-      
+
       $('#searches table tr').animate({
         opacity: 0.5
       }, 1000);
@@ -57,7 +58,7 @@
         if (current_user.id == data.user_id) {
           search_id = "" + data.id + "";
         };
-          
+
         var params = {
           search_id: search_id,
           match_all: data.search.match_all,

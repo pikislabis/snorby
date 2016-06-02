@@ -1,10 +1,10 @@
-<li data-signature-id="<%= event.signature.sig_sid.to_i %>" data-agent-id="<%= event.sensor.sid %>" data-session-id="<%= event.ip.ip_src %>_<%= event.ip.ip_dst %>_<%= event.signature.sig_id %>" id='event_<%= event.sid %><%= event.cid %>' class='event' data-event-id='<%= event.id %>' data-event-sid='<%= event.sid %>' data-event-cid='<%= event.cid %>'>
-	
-	<% classification_css = event.classification.blank? ? nil : "classified" %>
-	
-  <div class='row <%= classification_css %> <%= 'geoip' if geoip? %> <%= 'sessions' if @session_view %>'>		
+<li data-signature-id="<%= event.signature.sig_sid.to_i %>" data-agent-id="<%= event.sensor.sid %>" data-session-id="<%= event.ip.ip_src %>_<%= event.ip.ip_dst %>_<%= event.signature.sig_id %>" id='event_<%= event.sid %><%= event.cid %>' class='event' data-event-id='<%= event.data_id %>' data-event-sid='<%= event.sid %>' data-event-cid='<%= event.cid %>'>
 
-		<div class='select small'><%= check_box_tag 'event-selector', nil, false, :class => "check_box_#{event.id}" %></div>
+	<% classification_css = event.classification.blank? ? nil : "classified" %>
+
+  <div class='row <%= classification_css %> <%= 'geoip' if geoip? %> <%= 'sessions' if @session_view %>'>
+
+		<div class='select small'><%= check_box_tag 'event-selector', nil, false, :class => "check_box_#{event.data_id}" %></div>
 
     <div class='important small'>
       <% if event.favorite? %>
@@ -13,12 +13,12 @@
         <div class='create-favorite enabled'></div>
       <% end %>
     </div>
-		
+
 		<div class='severity small'><span class='severity sev<%= event.signature.severity_id || 0 %>'><%= event.signature.severity_id || 0 %></span></div>
     <div class='click sensor' title="<%= event.sensor.sensor_name %>">
       <%= event.sensor.sensor_name %>
     </div>
-		
+
     <div data-address="<%= event.ip.present? ? event.ip.ip_src : 'N/A' %>" class='click src_ip address'>
       <% if geoip? && event.ip.present?  %>
 
@@ -40,7 +40,7 @@
         </div>
       <% end %>
 		</div>
-		
+
 		<div data-address="<%= event.ip.present? ? event.ip.ip_dst : 'N/A' %>" class='click dst_ip address'>
       <% if geoip? && event.ip.present? %>
 
@@ -59,7 +59,7 @@
       <% end %>
 
 		</div>
-		
+
 		<% if classification_css %>
       <div class='click signature'>
         <span class='add_tipsy' title="<%= event.user.nil? ? '???' : event.user.name %> classified event as <%= event.classification.name %>">
@@ -73,12 +73,12 @@
         </span>
       </div>
 		<% end %>
-		
+
 		<div class='click timestamp'>
 			<% if event.notes_count > 0 %>
 				<span title="This event has <%= pluralize(event.notes_count, 'note') %>" class='add_tipsy round notes-count'><%= image_tag("icons/notes.png", :size => '16x16') %></span>
 			<% end %>
-			
+
       <b title='Event ID: <%= event.sid %>.<%= event.cid %> &nbsp; <%= display_time(event.timestamp) %>' class='add_tipsy'><%= event.pretty_time %></b>
 		</div>
 
@@ -88,9 +88,9 @@
         <span><%= number_with_delimiter event.number_of_events %></span>
       </div>
     <% end %>
-		
+
 	</div>
-	
+
 	<div style='display:none;' class='event-data' data='false'></div>
 
 </li>
