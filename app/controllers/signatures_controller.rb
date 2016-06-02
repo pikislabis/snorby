@@ -10,7 +10,7 @@ class SignaturesController < ApplicationController
   end
 
   def update
-    @signature = signature.get(params[:id])
+    @signature = signature.find(params[:id])
     if @signature.update(params[:signature])
       redirect_to signatures_path, :notice => 'Signature Updated Successfully.'
     else
@@ -19,11 +19,11 @@ class SignaturesController < ApplicationController
   end
 
   def edit
-    @signature = signature.get(params[:id])
+    @signature = signature.find(params[:id])
   end
 
   def destroy
-    @signature = signature.get(params[:id])
+    @signature = signature.find(params[:id])
     @signature.destroy
     redirect_to signatures_path, :notice => 'Signature Removed Successfully.'
   end

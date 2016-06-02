@@ -23,7 +23,7 @@ class SeveritiesController < ApplicationController
   end
 
   def update
-    @severity = Severity.get(params[:id])
+    @severity = Severity.find(params[:id])
     if @severity.update(params[:severity])
       redirect_to severities_path, :notice => 'Severity Updated Successfully.'
     else
@@ -32,11 +32,11 @@ class SeveritiesController < ApplicationController
   end
 
   def edit
-    @severity = Severity.get(params[:id])
+    @severity = Severity.find(params[:id])
   end
 
   def destroy
-    @severity = Severity.get(params[:id])
+    @severity = Severity.find(params[:id])
     @severity.destroy
     redirect_to severities_path, :notice => 'Severity Removed Successfully.'
   end

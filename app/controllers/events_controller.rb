@@ -109,7 +109,7 @@ class EventsController < ApplicationController
   end
 
   def request_packet_capture
-    @event = Event.get(params['sid'], params['cid'])
+    @event = Event.find(params['sid'], params['cid'])
     @packet = @event.packet_capture(params)
     respond_to do |format|
       format.html {render :layout => false}
@@ -166,7 +166,7 @@ class EventsController < ApplicationController
   end
 
   def create_email
-    @event = Event.get(params[:sid], params[:cid])
+    @event = Event.find_by(sid: params[:sid], cid: params[:cid])
     render :layout => false
   end
 
@@ -301,7 +301,7 @@ class EventsController < ApplicationController
   end
 
   def activity
-    @user = User.get(params[:user_id])
+    @user = User.find(params[:user_id])
     @user = @current_user unless @user
 
     @events = @user.events.page(params[:page].to_i, :per_page => @current_user.per_page_count,
@@ -319,7 +319,7 @@ class EventsController < ApplicationController
   end
 
   def packet_capture
-    @event = Event.get(params[:sid], params[:cid])
+    @event = Event.find_by(sid: params[:sid], cid: params[:cid])
     render :layout => false
   end
 

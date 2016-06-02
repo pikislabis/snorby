@@ -14,11 +14,11 @@ class ClassificationsController < ApplicationController
   end
 
   def show
-    @classification = Classification.get(params[:id])
+    @classification = Classification.find(params[:id])
 
     respond_to do |format|
       format.html # show.html.erb
-      format.xml  { render :xml => @classification }
+      format.xml  { render xml: @classification }
     end
   end
 
@@ -27,12 +27,12 @@ class ClassificationsController < ApplicationController
 
     respond_to do |format|
       format.html # new.html.erb
-      format.xml  { render :xml => @classification }
+      format.xml  { render xml: @classification }
     end
   end
 
   def edit
-    @classification = Classification.get(params[:id])
+    @classification = Classification.find(params[:id])
   end
 
   def create
@@ -50,7 +50,7 @@ class ClassificationsController < ApplicationController
   end
 
   def update
-    @classification = Classification.get(params[:id])
+    @classification = Classification.find(params[:id])
 
     respond_to do |format|
       if @classification.update(params[:classification])
@@ -64,7 +64,7 @@ class ClassificationsController < ApplicationController
   end
 
   def destroy
-    @classification = Classification.get(params[:id])
+    @classification = Classification.find(params[:id])
     @classification.destroy!
 
     respond_to do |format|

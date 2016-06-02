@@ -24,13 +24,13 @@ class UsersController < ApplicationController
   end
 
   def remove
-    @user = User.get(params[:id])
+    @user = User.find(params[:id])
     @user.destroy!
     redirect_to users_path, notice: 'Successfully Delete User'
   end
 
   def toggle_settings
-    @user = User.get(params[:user_id])
+    @user = User.find(params[:user_id])
 
     if @user.update(params[:user])
       render json: { success: 'User updated successfully.' }

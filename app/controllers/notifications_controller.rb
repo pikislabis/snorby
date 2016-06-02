@@ -10,7 +10,7 @@ class NotificationsController < ApplicationController
   end
 
   def show
-    @notification = Notification.get(params[:id])
+    @notification = Notification.find(params[:id])
 
     respond_to do |format|
       format.html # show.html.erb
@@ -20,42 +20,42 @@ class NotificationsController < ApplicationController
 
   def new
     @notification = Notification.new
-    @event = Event.get(params[:sid], params[:cid])
+    @event = Event.find_by(sid: params[:sid], cid: params[:cid])
     render :layout => false
   end
 
   def edit
-    @notification = Notification.get(params[:id])
+    @notification = Notification.find(params[:id])
   end
 
   def create
     @notification = Notification.create(params[:notification])
-    
+
     if params[:use_ip_src]
       @notification.ip_src = params[:notification][:ip_src]
     else
       @notification.ip_src = nil
     end
-    
+
     if params[:use_ip_dst]
       @notification.ip_dst = params[:notification][:ip_dst]
     else
       @notification.ip_dst = nil
     end
-    
+
     @notification.user = @current_user
-    
+
     @notification.save
-    
+
     respond_to do |format|
       format.html { render :layout => false }
       format.js
     end
-    
+
   end
 
   def update
-    @notification = Notification.get(params[:id])
+    @notification = Notification.find(params[:id])
 
     respond_to do |format|
       if @notification.update(params[:notification])
@@ -69,7 +69,7 @@ class NotificationsController < ApplicationController
   end
 
   def destroy
-    @notification = Notification.get(params[:id])
+    @notification = Notification.find(params[:id])
     @notification.destroy
 
     respond_to do |format|

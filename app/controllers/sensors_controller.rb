@@ -28,7 +28,7 @@ class SensorsController < ApplicationController
   end
 
   def destroy
-  	@sensor = Sensor.get(params[:id])
+  	@sensor = Sensor.find(params[:id])
   	unless Snorby::Worker.running?
 	   redirect_to :back, :flash => { :error => "The snorby working must be running in order to delete a sensor." }
 	  end
@@ -42,7 +42,7 @@ class SensorsController < ApplicationController
   end
 
   def update_name
-    @sensor = Sensor.get(params[:id])
+    @sensor = Sensor.find(params[:id])
     @sensor.update!(:name => params[:name]) if @sensor
     render :text => @sensor.name
   end

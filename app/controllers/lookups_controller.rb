@@ -16,7 +16,7 @@ class LookupsController < ApplicationController
   # GET /lookups/1
   # GET /lookups/1.xml
   def show
-    @lookup = Lookup.get(params[:id])
+    @lookup = Lookup.find(params[:id])
 
     respond_to do |format|
       format.html # show.html.erb
@@ -37,7 +37,7 @@ class LookupsController < ApplicationController
 
   # GET /lookups/1/edit
   def edit
-    @lookup = Lookup.get(params[:id])
+    @lookup = Lookup.find(params[:id])
   end
 
   # POST /lookups
@@ -59,7 +59,7 @@ class LookupsController < ApplicationController
   # PUT /lookups/1
   # PUT /lookups/1.xml
   def update
-    @lookup = Lookup.get(params[:id])
+    @lookup = Lookup.find(params[:id])
 
     respond_to do |format|
       if @lookup.update(params[:lookup])
@@ -75,7 +75,7 @@ class LookupsController < ApplicationController
   # DELETE /lookups/1
   # DELETE /lookups/1.xml
   def destroy
-    @lookup = Lookup.get(params[:id])
+    @lookup = Lookup.find(params[:id])
     @lookup.destroy
 
     respond_to do |format|

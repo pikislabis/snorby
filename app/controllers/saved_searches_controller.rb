@@ -30,7 +30,7 @@ class SavedSearchesController < ApplicationController
   end
 
   def show
-    @search = SavedSearch.get(params[:id].to_i)
+    @search = SavedSearch.find(params[:id].to_i)
 
     if @search
       if @current_user.id == @search.user.id || @search.public
@@ -54,7 +54,7 @@ class SavedSearchesController < ApplicationController
   end
 
   def edit
-    @search = SavedSearch.get(params[:id])
+    @search = SavedSearch.find(params[:id])
   end
 
   def update
