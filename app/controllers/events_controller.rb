@@ -127,9 +127,7 @@ class EventsController < ApplicationController
   end
 
   def show
-    if params.has_key?(:sessions)
-      @session_view = true
-    end
+    @session_view = true if params.key?(:sessions)
 
     @event = Event.find_by(sid: params['sid'], cid: params['cid'])
     @lookups ||= Lookup.all
@@ -138,21 +136,20 @@ class EventsController < ApplicationController
                                        per_page: 5).order(id: :desc)
 
     respond_to do |format|
-      format.html {render :layout => false}
+      format.html { render layout: false }
       format.js
 
       format.pdf do
-        render :pdf => "Event:#{@event.id}",
-               :template => "events/show.pdf.erb",
-               :layout => 'pdf.html.erb', :stylesheets => ["pdf"]
+        render pdf: "Event:#{@event.id}",
+               template: 'events/show.pdf.erb',
+               layout: 'pdf.html.erb', stylesheets: ['pdf']
       end
 
-      format.xml { render :xml => @event.in_xml }
-      format.csv { render :text => @event.to_csv }
-      format.json { render :json => {
-        :event => @event.in_json,
-        :notes => @notes.map(&:in_json)
-      }}
+      format.xml { render xml: @event.in_xml }
+      format.csv { render text: @event.to_csv }
+      format.json do
+        render json: { event: @event.in_json, notes: @notes.map(&:in_json) }
+      end
     end
   end
 

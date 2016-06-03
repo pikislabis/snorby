@@ -601,8 +601,15 @@ class Event < ActiveRecord::Base
   end
 
   def in_xml
-    # add user information
-    %{<snorby>#{to_xml}#{ip.to_xml}#{protocol_data.last.to_xml if protocol_data}#{classification.to_xml if classification}#{payload.to_xml if payload}</snorby>}.chomp
+    %{
+      <snorby>
+        #{to_xml(skip_instruct: true)}
+        #{ip.to_xml(skip_instruct: true)}
+        #{protocol_data.last.to_xml(skip_instruct: true) if protocol_data}
+        #{classification.to_xml(skip_instruct: true) if classification}
+        #{payload.to_xml(skip_instruct: true) if payload}
+      </snorby>
+    }.chomp
   end
 
   def in_json
