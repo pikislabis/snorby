@@ -5,7 +5,7 @@
 * [github.com/Snorby/snorby/wiki](http://github.com/Snorby/snorby/wiki)
 * irc.freenode.net #snorby
 
-[![Build Status](https://api.travis-ci.org/pikislabis/snorby.svg?branch=master)](http://travis-ci.org/pikislabis/snorby)
+[![Build Status](https://api.travis-ci.org/pikislabis/snorby.svg?branch=rails-4)](http://travis-ci.org/pikislabis/snorby)
 
 ## Description
 
