@@ -11,22 +11,22 @@ gem 'bundler',       '~> 1.12'
 gem 'request_store', '~> 1.3.1'
 
 gem 'jquery-rails',  '~> 4.1'
-gem 'env'
 gem 'json',          '~> 1.8.3'
+gem 'env'
 
 # Jruby
-gem 'jruby-openssl',               :platforms => :jruby
-gem 'warbler',                     :platforms => :jruby
-gem 'jruby-rack-worker',           :platforms => :jruby
+gem 'jruby-openssl',               platforms: :jruby
+gem 'warbler',                     platforms: :jruby
+gem 'jruby-rack-worker',           platforms: :jruby
 # gem 'glassfish', :platforms => :jruby
 
 # DateTime Patches
-gem 'home_run',                    :require => 'date', :platforms => :mri
+gem 'home_run',                    require: 'date', platforms: :mri
 
 gem 'mysql2',                      '0.4.4'
 
 # Deploy with Capistrano
-gem 'capistrano',                  '2.14.1'
+gem 'capistrano',                  '3.5.0'
 
 # Rails Plugins
 gem 'jammit',                      '~> 0.7.0'
@@ -35,11 +35,11 @@ gem 'devise',                      '~> 3.5'
 gem 'rubycas-client'
 gem 'devise_cas_authenticatable'
 gem 'mail',                        '~> 2.6'
-gem 'RedCloth',                    "~> 4.2.9", :require => 'redcloth'
-gem 'chronic',                     '~> 0.3.0'
+gem 'RedCloth',                    '~> 4.3.2', require: 'redcloth'
+gem 'chronic',                     '~> 0.10.2'
 gem 'pdfkit',                      '~> 0.5.0'
 gem 'ezprint',                     '~> 1.0.0'
-gem 'daemons',                     '~> 1.1.0'
+gem 'daemons',                     '~> 1.2.3'
 gem 'will_paginate',               '~> 3.1.0'
 
 gem 'delayed_job_active_record',   '~> 4.1.1'
