@@ -4,9 +4,9 @@ class Opt < ActiveRecord::Base
 
   self.primary_keys = :sid, :cid, :optid
 
-  belongs_to :sensor, :parent_key => [ :sid ], :child_key => [ :sid ], :required => true
+  belongs_to :sensor, foreign_key: :sid, primary_key: :sid, required: true
 
-  belongs_to :event, :parent_key => [ :sid, :cid ], :child_key => [ :sid, :cid ], :required => true
+  belongs_to :event, foreign_key: [:sid, :cid], primary_key: [:sid, :cid], required: true
 
   # property :sid, Integer, :key => true, :index => true, :min => 0
   #
