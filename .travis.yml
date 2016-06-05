@@ -1,6 +1,9 @@
 language: ruby
 rvm:
-  - 1.9
-  - 2
+  - 2.2.5
+services:
+  - mysql
+before_script:
+  - mysql -e 'create database snorby_test;'
 script:
   - bundle exec rake test
