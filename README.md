@@ -6,6 +6,7 @@
 * irc.freenode.net #snorby
 
 [![Build Status](https://api.travis-ci.org/pikislabis/snorby.svg?branch=rails-4)](http://travis-ci.org/pikislabis/snorby)
+[![Dependency Status](https://gemnasium.com/badges/github.com/pikislabis/snorby.svg)](https://gemnasium.com/github.com/pikislabis/snorby)
 
 ## Description
 
