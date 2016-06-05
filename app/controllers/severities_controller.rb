@@ -24,7 +24,7 @@ class SeveritiesController < ApplicationController
 
   def update
     @severity = Severity.find(params[:id])
-    if @severity.update(params[:severity])
+    if @severity.update(severity_params)
       redirect_to severities_path, notice: 'Severity Updated Successfully.'
     else
       render action: 'edit', notice: 'Error: Unable To Save Record.'
@@ -38,7 +38,7 @@ class SeveritiesController < ApplicationController
   def destroy
     @severity = Severity.find(params[:id])
     @severity.destroy
-    redirect_to severities_path, :notice => 'Severity Removed Successfully.'
+    redirect_to severities_path, notice: 'Severity Removed Successfully.'
   end
 
   private
