@@ -1,31 +1,35 @@
 # Snorby
 
-* [github.com/Snorby/snorby](http://github.com/Snorby/snorby/)
-* [github.com/Snorby/snorby/issues](http://github.com/Snorby/snorby/issues)
-* [github.com/Snorby/snorby/wiki](http://github.com/Snorby/snorby/wiki)
+* [github.com/pikislabis/snorby](http://github.com/Snorby/snorby/)
+* [github.com/pikislabis/snorby/issues](http://github.com/Snorby/snorby/issues)
+* [github.com/pikislabis/snorby/wiki](http://github.com/Snorby/snorby/wiki)
 * irc.freenode.net #snorby
 
 [![Build Status](https://api.travis-ci.org/pikislabis/snorby.svg?branch=rails-4)](http://travis-ci.org/pikislabis/snorby)
 
 ## Description
 
-Snorby is a ruby on rails web application for network security monitoring that interfaces with current popular intrusion detection systems (Snort, Suricata and Sagan). The basic fundamental concepts behind Snorby are **simplicity**, organization and power. The project goal is to create a free, open source and highly competitive application for network monitoring for both private and enterprise use.
+Snorby is a Ruby on Rails web application for network security monitoring that interfaces with current popular intrusion detection systems (Snort, Suricata and Sagan). The basic fundamental concepts behind Snorby are **simplicity**, organization and power. The project goal is to create a free, open source and highly competitive application for network monitoring for both private and enterprise use.
 
 ## Requirements
 
 * Snort
-* Ruby >= 1.9.2
-* Rails >= 3.0.0
+* Ruby >= 2.2.5
+* Rails >= 4.2.6
 
 ## Install
 
 * Get Snorby from the download section or use the latest edge release via git.
 
-	`git clone git://github.com/Snorby/snorby.git`
+	`git clone git://github.com/pikislabis/snorby.git`
 
 * Move into de snorby Directory
 
 	`cd snorby`
+
+* Move to branch rails-4
+
+	`git checkout rails-4`
 
 * Install Gem Dependencies  (make sure you have bundler installed: `gem install bundler`)
 
