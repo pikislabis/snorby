@@ -61,21 +61,16 @@ gem 'netaddr',                     '~> 1.5.1'
 # gem 'dm-zone-types',               '~> 0.3'
 gem 'timezone_local',              '~> 0.1.5'
 
-group(:development) do
-  gem "letter_opener"
-  gem 'thin'
+group :development, :test do
+  # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
   gem 'pry-rails'
+  gem 'pry-nav'
 end
 
-group(:test) do
-  gem 'capybara'
-  gem 'test-unit'
-  gem 'rspec',                	  RSPEC_VERSION
-  gem 'rspec-core',               RSPEC_VERSION, :require => 'rspec/core'
-  gem 'rspec-expectations',       RSPEC_VERSION, :require => 'rspec/expectations'
-  gem 'rspec-rails',		          RSPEC_VERSION
-  gem 'ansi'
-  gem 'turn'
-  gem 'minitest'
+group :development do
+  gem 'letter_opener'
+  gem 'thin'
+  gem 'better_errors'
+  gem 'binding_of_caller'
 end
