@@ -34,7 +34,6 @@ vendor/bundle/
 nbproject
 
 # Ignore Config Files
-config/snorby_config.yml
 config/snorby.yml
 config/snorby-geoip.dat
 snorby.war

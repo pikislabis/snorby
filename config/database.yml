@@ -4,7 +4,7 @@
 # NOTE: Indentation is important.
 #
 snorby: &snorby
-  adapter: mysql
+  adapter: mysql2
   username: root
   password: "Enter Password Here" # Example: password: "s3cr3tsauce"
   host: localhost
@@ -14,8 +14,10 @@ development:
   <<: *snorby
 
 test:
-  database: snorby
-  <<: *snorby
+  adapter: mysql2
+  database: snorby_test
+  username: travis
+  encoding: utf8
 
 production:
   database: snorby
