@@ -4,4 +4,7 @@
 # If you change this key, all old signed cookies will become invalid!
 # Make sure the secret is at least 30 characters and all random,
 # no regular words or you'll be exposed to dictionary attacks.
-Snorby::Application.config.secret_token = 'b5893af7fcebed06c335240b70740caef872c73d18265959d954feddab0a7dc2285e210f4864a23f2572a45a45098c6b11a00b006cf84773340ce32dd7647b50'
+
+# Make sure your secret_key_base is kept private
+# if you're sharing your code publicly.
+Snorby::Application.config.secret_key_base = 'b5893af7fcebed06c335240b70740caef872c73d18265959d954feddab0a7dc2285e210f4864a23f2572a45a45098c6b11a00b006cf84773340ce32dd7647b50'
