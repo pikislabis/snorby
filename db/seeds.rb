@@ -37,62 +37,45 @@ Setting.set(:autodrop, nil) unless Setting.autodrop?
 Setting.set(:autodrop_count, nil) unless Setting.autodrop_count?
 
 # Load Default Classifications
+Classification.create_with(description: 'Unauthorized Root Access',
+                           hotkey: 1,
+                           locked: true)
+              .find_or_create_by(name: 'Unauthorized Root Access')
 
-Classification.first_or_create({ :name => "Unauthorized Root Access" }, {
-  :name => 'Unauthorized Root Access',
-  :description => 'Unauthorized Root Access',
-  :hotkey => 1,
-  :locked => true
-})
+Classification.create_with(description: 'Unauthorized User Access',
+                           hotkey: 2,
+                           locked: true)
+              .find_or_create_by(name: 'Unauthorized User Access')
 
-Classification.first_or_create({ :name => "Unauthorized User Access" }, {
-  :name => 'Unauthorized User Access',
-  :description => 'Unauthorized User Access',
-  :hotkey => 2,
-  :locked => true
-})
+Classification.create_with(description: 'Attempted Unauthorized Access',
+                           hotkey: 3,
+                           locked: true)
+              .find_or_create_by(name: 'Attempted Unauthorized Access')
 
-Classification.first_or_create({ :name => "Attempted Unauthorized Access" }, {
-  :name => 'Attempted Unauthorized Access',
-  :description => 'Attempted Unauthorized Access',
-  :hotkey => 3,
-  :locked => true
-})
+Classification.create_with(description: 'Denial of Service Attack',
+                           hotkey: 4,
+                           locked: true)
+              .find_or_create_by(name: 'Denial of Service Attack')
 
-Classification.first_or_create({ :name => "Denial of Service Attack" }, {
-  :name => 'Denial of Service Attack',
-  :description => 'Denial of Service Attack',
-  :hotkey => 4,
-  :locked => true
-})
+Classification.create_with(description: 'Policy Violation',
+                           hotkey: 5,
+                           locked: true)
+              .find_or_create_by(name: 'Policy Violation')
 
-Classification.first_or_create({ :name => "Policy Violation" }, {
-  :name => 'Policy Violation',
-  :description => 'Policy Violation',
-  :hotkey => 5,
-  :locked => true
-})
+Classification.create_with(description: 'Reconnaissance',
+                           hotkey: 6,
+                           locked: true)
+              .find_or_create_by(name: 'Reconnaissance')
 
-Classification.first_or_create({:name => "Reconnaissance"}, {
-  :name => 'Reconnaissance',
-  :description => 'Reconnaissance',
-  :hotkey => 6,
-  :locked => true
-})
+Classification.create_with(description: 'Virus Infection',
+                           hotkey: 7,
+                           locked: true)
+              .find_or_create_by(name: 'Virus Infection')
 
-Classification.first_or_create({:name => "Virus Infection"}, {
-  :name => 'Virus Infection',
-  :description => 'Virus Infection',
-  :hotkey => 7,
-  :locked => true
-})
-
-Classification.first_or_create({:name => "False Positive"}, {
-  :name => 'False Positive',
-  :description => 'False Positive',
-  :hotkey => 8,
-  :locked => true
-})
+Classification.create_with(description: 'False Positive',
+                           hotkey: 8,
+                           locked: true)
+              .find_or_create_by(name: 'False Positive')
 
 # Load Default Severities
 if Severity.all.blank?
@@ -105,4 +88,3 @@ end
 require "./lib/snorby/jobs/cache_helper"
 include Snorby::Jobs::CacheHelper
 validate_cache_indexes
-
