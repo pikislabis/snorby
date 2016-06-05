@@ -4,8 +4,29 @@
 # model remove the '{}' from the fixture names and add the columns immediately
 # below each fixture, per the syntax in the comments below
 #
-one: {}
-# column: value
-#
-two: {}
-#  column: value
+high:
+  id: 1
+  sig_id: 1
+  name: High Severity
+  text_color: '#ffffff'
+  bg_color: '#ff0000'
+
+medium:
+  id: 2
+  sig_id: 2
+  name: Medium Severity
+  text_color: "#ffffff"
+  bg_color: "#fab908"
+
+low:
+  id: 3
+  sig_id: 3
+  name: Low Severity
+  text_color: "#ffffff"
+  bg_color: "#3a781a"
+
+very_low:
+  sig_id: 4
+  name: Very Low Severity
+  bg_color: '#dddddd'
+  text_color: '#ffffff' 

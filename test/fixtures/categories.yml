@@ -4,8 +4,18 @@
 # model remove the '{}' from the fixture names and add the columns immediately
 # below each fixture, per the syntax in the comments below
 #
-one: {}
-# column: value
-#
-two: {}
-#  column: value
+one:
+  sig_class_id: 1
+  sig_class_name: not-suspicious
+
+two:
+  sig_class_id: 2
+  sig_class_name: unknown
+
+three:
+  sig_class_id: 3
+  sig_class_name: bad-unknown
+
+four:
+  sig_class_id: 4
+  sig_class_name: attempted-recon
