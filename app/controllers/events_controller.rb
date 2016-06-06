@@ -109,7 +109,7 @@ class EventsController < ApplicationController
   end
 
   def request_packet_capture
-    @event = Event.find(params['sid'], params['cid'])
+    @event = Event.find_by(sid: params['sid'], cid: params['cid'])
     @packet = @event.packet_capture(params)
     respond_to do |format|
       format.html {render :layout => false}
