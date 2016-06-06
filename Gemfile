@@ -31,7 +31,7 @@ gem 'capistrano',                  '3.5.0'
 # Rails Plugins
 gem 'jammit',                      '~> 0.7.0'
 gem 'cancan',                      '~> 1.6'
-gem 'devise',                      '~> 3.5'
+gem 'devise',                      '~> 4.1.1'
 gem 'rubycas-client'
 gem 'devise_cas_authenticatable'
 gem 'mail',                        '~> 2.6'

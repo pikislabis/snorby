@@ -22,7 +22,7 @@ Snorby::Application.routes.draw do
       :passwords => 'passwords'
     } do
     get "/login" => "devise/sessions#new"
-    get '/logout', :to => "devise/sessions#destroy"
+    delete '/logout', :to => "devise/sessions#destroy"
     get '/reset/password', :to => "devise/passwords#edit"
   end
 
