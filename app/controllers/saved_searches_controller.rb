@@ -99,7 +99,7 @@ class SavedSearchesController < ApplicationController
     end
 
     if @search.save
-      render text: @search.title
+      render text: sanitize(@search.title)
     else
       render json: @search.errors
     end
