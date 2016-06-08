@@ -4,8 +4,22 @@
 # model remove the '{}' from the fixture names and add the columns immediately
 # below each fixture, per the syntax in the comments below
 #
-one: {}
-# column: value
-#
-two: {}
-#  column: value
+one:
+  sig_id: 1
+  sig_class_id: 0
+  sig_name: "dnp3: DNP3 Application-Layer Fragment uses a reserved function code."
+  sig_priority: 0
+  sig_rev: 1
+  sig_sid: 6
+  sig_gid: 145
+  events_count: 1
+
+two:
+  sig_id: 2
+  sig_class_id: 0
+  sig_name: "dnp3: DNP3 Link-Layer Frame uses a reserved address."
+  sig_priority: 0
+  sig_rev: 1
+  sig_sid: 5
+  sig_gid: 145
+  events_count: 1
