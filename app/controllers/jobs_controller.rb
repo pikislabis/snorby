@@ -5,7 +5,7 @@ class JobsController < ApplicationController
   def index
     @jobs = Snorby::Jobs.find.all
     @process = Snorby::Worker.process
-    
+
     respond_to do |format|
       format.html
       format.js
@@ -17,7 +17,7 @@ class JobsController < ApplicationController
     @job = Snorby::Jobs.find.get(params[:id])
     render :layout => false
   end
-  
+
   def handler
     @job = Snorby::Jobs.find.get(params[:id])
     render :layout => false
@@ -41,18 +41,20 @@ class JobsController < ApplicationController
 
     respond_to do |format|
       if @job.update(params[:job])
-        format.html { redirect_to(@job, :notice => 'Job was successfully updated.') }
+        format.html do
+          redirect_to job_path(@job), notice: 'Job was successfully updated.'
+        end
         format.xml  { head :ok }
       else
-        format.html { render :action => "edit" }
-        format.xml  { render :xml => @job.errors, :status => :unprocessable_entity }
+        format.html { render action: 'edit' }
+        format.xml  { render xml: @job.errors, status: :unprocessable_entity }
       end
     end
   end
 
   def destroy
     @job = Snorby::Jobs.find.get(params[:id])
-    
+
     if @job.blank?
       redirect_to jobs_url
     else
@@ -62,6 +64,6 @@ class JobsController < ApplicationController
         format.xml  { head :ok }
       end
     end
-    
+
   end
 end

@@ -44,7 +44,7 @@ class SensorsController < ApplicationController
   def update_name
     @sensor = Sensor.find(params[:id])
     @sensor.update!(:name => params[:name]) if @sensor
-    render :text => @sensor.name
+    render text: ActionController::Base.helpers.sanitize(@sensor.name)
   end
 
 end

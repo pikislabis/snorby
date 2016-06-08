@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::Base
   # use Rails::DataMapper::Middleware::IdentityMap
-  protect_from_forgery
+  protect_from_forgery with: :exception
 
   before_filter :user_setup
   after_filter :set_timezone

@@ -146,7 +146,9 @@ class EventsController < ApplicationController
       end
 
       format.xml { render xml: @event.in_xml }
-      format.csv { render text: @event.to_csv }
+      format.csv do
+        render text: ActionController::Base.helpers.sanitize(@event.to_csv)
+      end
       format.json do
         render json: { event: @event.in_json, notes: @notes.map(&:in_json) }
       end

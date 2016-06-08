@@ -1,13 +1,9 @@
 module Snorby
-
-  class Worker < Struct.new(:action)
-
+  Worker = Struct.new(:action) do
     @@pid_path = "#{Rails.root}/tmp/pids"
-
     @@pid_file = "#{Rails.root}/tmp/pids/delayed_job.pid"
 
     def perform
-
       case action.to_sym
       when :start
         Worker.start
@@ -18,12 +14,11 @@ module Snorby
       when :zap
         Worker.zap
       end
-
     end
 
     def self.problems?
       worker_and_caches = (!Snorby::Worker.running? || !DelayedJob.sensor_cache?)
-      Setting.geoip? ? ( worker_and_caches || !DelayedJob.geoip_update?) : worker_and_caches
+      Setting.geoip? ? (worker_and_caches || !DelayedJob.geoip_update?) : worker_and_caches
     end
 
     def self.process
@@ -33,11 +28,11 @@ module Snorby
     end
 
     def self.pid
-      File.open(@@pid_file).read.to_i if File.exists?(@@pid_file)
+      File.open(@@pid_file).read.to_i if File.exist?(@@pid_file)
     end
 
     def self.running?
-      return true if File.exists?(@@pid_file) && !Worker.process.raw.empty?
+      return true if File.exist?(@@pid_file) && !Worker.process.raw.empty?
       false
     end
 
@@ -56,7 +51,5 @@ module Snorby
     def self.zap
       `#{Rails.root}/script/delayed_job zap --pid-dir #{@@pid_path} RAILS_ENV=#{Rails.env}`
     end
-
   end
-
 end
