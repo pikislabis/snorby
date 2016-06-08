@@ -4,7 +4,6 @@ class PageController < ApplicationController
   include Snorby::Jobs::CacheHelper
 
   def dashboard
-
     @now = Time.now
 
     @range = params[:range].blank? ? 'last_24' : params[:range]
@@ -37,10 +36,10 @@ class PageController < ApplicationController
     @event_count = @caches.map(&:event_count).sum
 
     @axis = if @sensor_metrics.last
-      @sensor_metrics.last[:range].join(',')
-    else
-      ''
-    end
+              @sensor_metrics.last[:range].join(',')
+            else
+              ''
+            end
 
     @classifications = Classification.all.order(events_count: :desc)
     @sensors = Sensor.all.limit(5).order(events_count: :desc)
@@ -50,17 +49,16 @@ class PageController < ApplicationController
 
     signatures = latest_five_distinct_signatures
 
-    @recent_events = [];
+    @recent_events = []
     signatures.each { |s| @recent_events << Event.where(signature: s).last }
 
     respond_to do |format|
       format.html # { render :template => 'page/dashboard.pdf.erb', :layout => 'pdf.html.erb' }
       format.js
       format.pdf do
-        render :pdf => "Snorby Report - #{@start_time.strftime('%A-%B-%d-%Y-%I-%M-%p')} - #{@end_time.strftime('%A-%B-%d-%Y-%I-%M-%p')}", :template => "page/dashboard.pdf.erb", :layout => 'pdf.html.erb', :stylesheets => ["pdf"]
+        render pdf: "Snorby Report - #{@start_time.strftime('%A-%B-%d-%Y-%I-%M-%p')} - #{@end_time.strftime('%A-%B-%d-%Y-%I-%M-%p')}", :template => "page/dashboard.pdf.erb", :layout => 'pdf.html.erb', :stylesheets => ["pdf"]
       end
     end
-
   end
 
   def search
@@ -68,33 +66,32 @@ class PageController < ApplicationController
   end
 
   def search_json
-    render :json => Snorby::Search.json
+    render json: Snorby::Search.json
   end
 
   def force_cache
     Snorby::Jobs.force_sensor_cache
-    render :json => {
-      :caching => Snorby::Jobs.caching?,
-      :problems => Snorby::Worker.problems?,
-      :running => Snorby::Worker.running?,
-      :daily_cache => Snorby::Jobs.daily_cache?,
-      :sensor_cache => Snorby::Jobs.sensor_cache?
+    render json: {
+      caching: DelayedJob.caching?,
+      problems: Snorby::Worker.problems?,
+      running: Snorby::Worker.running?,
+      daily_cache: DelayedJob.daily_cache?,
+      sensor_cache: DelayedJob.sensor_cache?
     }
   end
 
   def cache_status
-    render :json => {
-      :caching => Snorby::Jobs.caching?,
-      :problems => Snorby::Worker.problems?,
-      :running => Snorby::Worker.running?,
-      :daily_cache => Snorby::Jobs.daily_cache?,
-      :sensor_cache => Snorby::Jobs.sensor_cache?
+    render json: {
+      caching: DelayedJob.caching?,
+      problems: Snorby::Worker.problems?,
+      running: Snorby::Worker.running?,
+      daily_cache: DelayedJob.daily_cache?,
+      sensor_cache: DelayedJob.sensor_cache?
     }
   end
 
   def results
-
-    if params.has_key?(:search) && !params[:search].blank?
+    if params.key?(:search) && !params[:search].blank?
 
       if params[:search].is_a?(String)
         @value ||= JSON.parse(params[:search])
@@ -102,12 +99,12 @@ class PageController < ApplicationController
       end
 
       enabled_count = 0
-      for item in params[:search] do
+      params[:search].each do |item|
         x = item.last
-        enabled = (x['enabled'] or x[:enabled]).to_s
+        enabled = (x['enabled'] || x[:enabled]).to_s
 
         if !enabled.blank?
-          enabled_count += 1 if enabled.to_s === "true"
+          enabled_count += 1 if enabled.to_s == 'true'
         else
           enabled_count += 1
         end
@@ -117,16 +114,14 @@ class PageController < ApplicationController
         redirect_to :back, flash: { error: 'There was a problem parsing the search rules.' }
 
       else
-        if params[:search_id]
-          @search_object ||= params[:search_id]
-        end
+        @search_object ||= params[:search_id] if params[:search_id]
 
         params[:sort] = sort_column
         params[:direction] = sort_direction
 
         params[:classification_all] = true
 
-        @search = (params.has_key?(:authenticity_token) ? true : false)
+        @search = (params.key?(:authenticity_token) ? true : false)
 
         @params = params.to_json
 
@@ -136,15 +131,15 @@ class PageController < ApplicationController
       end
 
     else
-      redirect_to :back, :flash => {
-        :error => "There was a problem parsing the search rules."
+      redirect_to :back, flash: {
+        error: 'There was a problem parsing the search rules.'
       }
     end
 
   rescue ActionController::RedirectBackError
-    redirect_to search_path, :flash => {
-        :error => "There was a problem parsing the search rules."
-      }
+    redirect_to search_path, flash: {
+      error: 'There was a problem parsing the search rules.'
+    }
   end
 
   private
@@ -154,7 +149,7 @@ class PageController < ApplicationController
 
     case @range.to_sym
     when :custom
-      @caches = Cache.where("ran_at >= ? AND ran_at <= ?", @custom_start, @custom_end)
+      @caches = Cache.where('ran_at >= ? AND ran_at <= ?', @custom_start, @custom_end)
       @start_time = Time.zone.parse(@custom_start).beginning_of_day
       @end_time = Time.zone.parse(@custom_end).end_of_day
     when :last_24
@@ -212,21 +207,19 @@ class PageController < ApplicationController
       @start_time = @now.beginning_of_day
       @end_time = @now.end_of_day
     end
-
   end
 
   def sort_column
-    return :timestamp unless params.has_key?(:sort)
-    return params[:sort].to_sym if Event::SORT.has_key?(params[:sort].to_sym)
+    return :timestamp unless params.key?(:sort)
+    return params[:sort].to_sym if Event::SORT.key?(params[:sort].to_sym)
     :timestamp
   end
 
   def sort_direction
-    %w[asc desc].include?(params[:direction].to_s) ? params[:direction].to_sym : :desc
+    %w(asc desc).include?(params[:direction].to_s) ? params[:direction].to_sym : :desc
   end
 
   def sort_page
     params[:page].to_i
   end
-
 end
