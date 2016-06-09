@@ -70,7 +70,7 @@ class PageController < ApplicationController
   end
 
   def force_cache
-    Snorby::Jobs.force_sensor_cache
+    DelayedJob.force_sensor_cache
     render json: {
       caching: DelayedJob.caching?,
       problems: Snorby::Worker.problems?,
