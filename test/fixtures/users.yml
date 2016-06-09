@@ -8,3 +8,8 @@ admin:
   name: Administrator
   email: snorby@example.com
   admin: true
+
+user:
+  name: 'User'
+  email: user@example.com
+  admin: false

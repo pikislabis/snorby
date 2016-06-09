@@ -36,15 +36,15 @@ class ClassificationsController < ApplicationController
   end
 
   def create
-    @classification = Classification.new(params[:classification])
+    @classification = Classification.new(classification_params)
 
     respond_to do |format|
       if @classification.save
-        format.html { redirect_to(classifications_url, :notice => 'Classification was successfully created.') }
-        format.xml  { render :xml => @classification, :status => :created, :location => @classification }
+        format.html { redirect_to(classifications_url, notice: 'Classification was successfully created.') }
+        format.xml  { render xml: @classification, status: :created, location: @classification }
       else
-        format.html { render :action => "new" }
-        format.xml  { render :xml => @classification.errors, :status => :unprocessable_entity }
+        format.html { render action: 'new' }
+        format.xml  { render xml: @classification.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -53,12 +53,12 @@ class ClassificationsController < ApplicationController
     @classification = Classification.find(params[:id])
 
     respond_to do |format|
-      if @classification.update(params[:classification])
-        format.html { redirect_to(classifications_url, :notice => 'Classification was successfully updated.') }
+      if @classification.update(classification_params)
+        format.html { redirect_to(classifications_url, notice: 'Classification was successfully updated.') }
         format.xml  { head :ok }
       else
-        format.html { render :action => "edit" }
-        format.xml  { render :xml => @classification.errors, :status => :unprocessable_entity }
+        format.html { render action: 'edit' }
+        format.xml  { render xml: @classification.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -71,5 +71,11 @@ class ClassificationsController < ApplicationController
       format.html { redirect_to(classifications_url) }
       format.xml  { head :ok }
     end
+  end
+
+  private
+
+  def classification_params
+    params.require(:classification).permit(:name, :description)
   end
 end
