@@ -117,11 +117,11 @@ class DelayedJob < ActiveRecord::Base
   end
 
   def self.force_sensor_cache
-    if Jobs.sensor_cache?
-      Jobs.sensor_cache.update(:run_at => DateTime.now + 5.second)
+    if DelayedJob.sensor_cache?
+      DelayedJob.sensor_cache.update(run_at: DateTime.now + 5.second)
     else
       Delayed::Job.enqueue(Snorby::Jobs::SensorCacheJob.new(false),
-      :priority => 1, :run_at => DateTime.now + 5.second)
+                           priority: 1, run_at: DateTime.now + 5.second)
     end
   end
 
