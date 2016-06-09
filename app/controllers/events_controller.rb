@@ -10,22 +10,7 @@ class EventsController < ApplicationController
     @events = Event.sorty(params)
     @classifications ||= Classification.all
 
-    respond_to do |format|
-      format.html {render :layout => true}
-      format.js
-      format.json {render :json => {
-        :events => @events.map(&:detailed_json),
-        :classifications => @classifications,
-        :pagination => {
-          :total => @events.pager.total,
-          :per_page => @events.pager.per_page,
-          :current_page => @events.pager.current_page,
-          :previous_page => @events.pager.previous_page,
-          :next_page => @events.pager.next_page,
-          :total_pages => @events.pager.total_pages
-        }
-      }}
-    end
+    respond_event
   end
 
   def sessions
@@ -43,13 +28,13 @@ class EventsController < ApplicationController
     }
 
     sort = if [:sid,:signature,:timestamp].include?(params[:sort])
-      "e.#{params[:sort]}"
-    elsif params[:sort] == :sig_priority
-      sql += "inner join signature s on e.signature = s.sig_id "
-      "s.#{params[:sort]}"
-    else
-      "a.#{params[:sort]}"
-    end
+             "e.#{params[:sort]}"
+           elsif params[:sort] == :sig_priority
+             sql += 'inner join signature s on e.signature = s.sig_id '
+             "s.#{params[:sort]}"
+           else
+             "a.#{params[:sort]}"
+           end
 
     sql += "order by #{sort} #{params[:direction]}"
 
@@ -57,22 +42,7 @@ class EventsController < ApplicationController
 
     @classifications ||= Classification.all
 
-    respond_to do |format|
-      format.html {render :layout => true}
-      format.js
-      format.json {render :json => {
-        :events => @events.map(&:detailed_json),
-        :classifications => @classifications,
-        :pagination => {
-          :total => @events.total_entries,
-          :per_page => @events.per_page,
-          :current_page => @events.current_page,
-          :previous_page => @events.previous_page,
-          :next_page => @events.next_page,
-          :total_pages => @events.total_pages
-        }
-      }}
-    end
+    respond_event
   end
 
   def queue
@@ -89,30 +59,14 @@ class EventsController < ApplicationController
 
     @classifications ||= Classification.all
 
-    respond_to do |format|
-      format.html { render layout: true }
-      format.js
-      format.json {render :json => {
-        :events => @events.map(&:detailed_json),
-        :classifications => @classifications,
-        :pagination => {
-          :total => @events.pager.total,
-          :per_page => @events.pager.per_page,
-          :current_page => @events.pager.current_page,
-          :previous_page => @events.pager.previous_page,
-          :next_page => @events.pager.next_page,
-          :total_pages => @events.pager.total_pages
-        }
-      }}
-    end
-
+    respond_event
   end
 
   def request_packet_capture
     @event = Event.find_by(sid: params['sid'], cid: params['cid'])
     @packet = @event.packet_capture(params)
     respond_to do |format|
-      format.html {render :layout => false}
+      format.html { render layout: false }
       format.js
     end
   end
@@ -122,7 +76,7 @@ class EventsController < ApplicationController
     @event.rule ? @rule = @event.rule : @rule = 'No rule found for this event.'
 
     respond_to do |format|
-      format.html { render :layout => false }
+      format.html { render layout: false }
     end
   end
 
@@ -166,15 +120,17 @@ class EventsController < ApplicationController
 
   def create_email
     @event = Event.find_by(sid: params[:sid], cid: params[:cid])
-    render :layout => false
+    render layout: false
   end
 
   def email
-    Delayed::Job.enqueue(Snorby::Jobs::EventMailerJob.new(params[:sid],
-    params[:cid], params[:email]))
+    Delayed::Job.enqueue(
+      Snorby::Jobs::EventMailerJob.new(params[:sid], params[:cid],
+                                       params[:email])
+    )
 
     respond_to do |format|
-      format.html { render :layout => false }
+      format.html { render layout: false }
       format.js
     end
   end
@@ -229,73 +185,80 @@ class EventsController < ApplicationController
     @events = Event.find_by_ids(params[:events])
 
     respond_to do |format|
-      format.json { render :json => @events }
-      format.xml { render :xml => @events }
-      format.csv { render :json => @events.to_csv }
+      format.json { render json: @events }
+      format.xml { render xml: @events }
+      format.csv { render json: @events.to_csv }
     end
   end
 
   def history
-    @events = Event.all(:user_id => @current_user.id).page(params[:page].to_i,
-    :per_page => @current_user.per_page_count, :order => [:timestamp.desc])
+    @events = Event.all(user_id: @current_user.id)
+                   .page(params[:page].to_i,
+                         per_page: @current_user.per_page_count,
+                         order: [:timestamp.desc])
     @classifications ||= Classification.all
   end
 
   def classify
     if params[:events]
-      Event.update_classification(params[:events], params[:classification].to_i, User.current_user.id)
+      Event.update_classification(params[:events],
+                                  params[:classification].to_i,
+                                  User.current_user.id)
     end
 
     respond_to do |format|
-      format.html { render :layout => false, :status => 200 }
-      format.json { render :json => { :status => 'success' }}
+      format.html { render layout: false, status: 200 }
+      format.json { render json: { status: 'success' } }
     end
   end
 
   def classify_sessions
     if params[:events]
-      Event.update_classification_by_session(params[:events], params[:classification].to_i, User.current_user.id)
+      Event.update_classification_by_session(params[:events],
+                                             params[:classification].to_i,
+                                             User.current_user.id)
     end
 
     respond_to do |format|
-      format.html { render :layout => false, :status => 200 }
-      format.json { render :json => { :status => 'success' }}
+      format.html { render layout: false, status: 200 }
+      format.json { render json: { status: 'success' } }
     end
   end
 
   def mass_create_favorite
     @events ||= Event.find_by_ids(params[:events])
     @events.each { |event| event.create_favorite unless favorite? }
-    render :json => {}
+    render json: {}
   end
 
   def mass_destroy_favorite
     @events ||= Event.find_by_ids(params[:events])
     @events.each { |event| event.destroy_favorite if favorite? }
-    render :json => {}
+    render json: {}
   end
 
   def last
-    render :json => { :time => Event.last_event_timestamp }
+    render json: { time: Event.last_event_timestamp }
   end
 
   def since
     @events = Event.to_json_since(params[:timestamp])
-    render :json => @events.to_json
+    render json: @events.to_json
   end
 
   def favorite
     @event = Event.find_by(sid: params[:sid], cid: params[:cid])
     @event.toggle_favorite
-    render :json => { :favorite => @event.favorite? }
+    render json: { favorite: @event.favorite? }
   end
 
   def lookup
     if Setting.lookups?
       @lookup = Snorby::Lookup.new(params[:address])
-      render :layout => false
+      render layout: false
     else
-      render :text => '<div id="note-box">This feature has be disabled</div>'.html_safe, :notice => 'This feature has be disabled'
+      render text: '<div id="note-box">This feature has be disabled</div>'.html_safe,
+             notice: 'This feature has be disabled'
     end
   end
 
@@ -303,8 +266,9 @@ class EventsController < ApplicationController
     @user = User.find(params[:user_id])
     @user = @current_user unless @user
 
-    @events = @user.events.page(params[:page].to_i, :per_page => @current_user.per_page_count,
-              :order => [:timestamp.desc])
+    @events = @user.events.page(params[:page].to_i,
+                                per_page: @current_user.per_page_count,
+                                order: [:timestamp.desc])
 
     @classifications ||= Classification.all
   end
@@ -312,29 +276,49 @@ class EventsController < ApplicationController
   def hotkey
     @classifications ||= Classification.all
     respond_to do |format|
-      format.html {render :layout => false}
+      format.html { render layout: false }
       format.js
     end
   end
 
   def packet_capture
     @event = Event.find_by(sid: params[:sid], cid: params[:cid])
-    render :layout => false
+    render layout: false
   end
 
   private
 
   def sort_column
-
-    if params.has_key?(:sort)
-      return params[:sort].to_sym if Event::SORT.has_key?(params[:sort].to_sym) or [:signature].include?(params[:sort].to_sym)
+    if params.key?(:sort)
+      return params[:sort].to_sym if Event::SORT.key?(params[:sort].to_sym) ||
+                                     [:signature].include?(params[:sort].to_sym)
     end
 
     :timestamp
   end
 
   def sort_direction
-    %w[asc desc].include?(params[:direction].to_s) ? params[:direction].to_sym : :desc
+    %w(asc desc).include?(params[:direction].to_s) ? params[:direction].to_sym : :desc
   end
 
+  def respond_event
+    respond_to do |format|
+      format.html { render layout: true }
+      format.js
+      format.json do
+        render json: {
+          events: @events.map(&:detailed_json),
+          classifications: @classifications,
+          pagination: {
+            total: @events.pager.total,
+            per_page: @events.pager.per_page,
+            current_page: @events.pager.current_page,
+            previous_page: @events.pager.previous_page,
+            next_page: @events.pager.next_page,
+            total_pages: @events.pager.total_pages
+          }
+        }
+      end
+    end
+  end
 end
