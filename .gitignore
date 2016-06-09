@@ -36,4 +36,5 @@ nbproject
 # Ignore Config Files
 config/snorby.yml
 config/snorby-geoip.dat
+config/initializers/secret_token.rb
 snorby.war
