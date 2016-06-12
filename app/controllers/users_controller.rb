@@ -1,6 +1,5 @@
 class UsersController < ApplicationController
-  before_action :require_administrative_privileges,
-                only: [:index, :add, :new, :remove]
+  before_action :require_administrative_privileges
 
   def index
     @users =
@@ -32,12 +31,11 @@ class UsersController < ApplicationController
   def toggle_settings
     @user = User.find(params[:user_id])
 
-    if @user.update(params[:user])
+    if @user.update(user_params)
       render json: { success: 'User updated successfully.' }
     else
       render json: { error: 'Error while changing user attributes.' }
     end
-
   end
 
   private

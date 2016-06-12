@@ -24,7 +24,7 @@ class Notification < ActiveRecord::Base
 
   belongs_to :user
 
-  belongs_to :signature, :child_key => :sig_id, :parent_key => :sig_id
+  belongs_to :signature, primary_key: :sig_id, foreign_key: :sig_id
 
   def check(event)
 
