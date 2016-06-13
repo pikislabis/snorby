@@ -26,13 +26,12 @@ Snorby::Application.routes.draw do
     get '/reset/password', :to => "devise/passwords#edit"
   end
 
-  root :to => "page#dashboard"
+  root to: 'page#dashboard'
 
   resources :sensors do
-
-
     collection do
       get :agent_list
+      post :update_name
     end
   end
 

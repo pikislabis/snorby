@@ -79,4 +79,5 @@ group :test do
   gem 'codeclimate-test-reporter', require: false
   gem 'simplecov', require: false
   gem 'shoulda'
+  gem 'mocha'
 end

@@ -5,5 +5,8 @@
 # below each fixture, per the syntax in the comments below
 #
 one:
-  name: 'test'
   sid: 1
+  name: 'sensorOne'
+  hostname: 'sensorIPS:eth0'
+  interface: 'eth0'
+  last_cid: 2

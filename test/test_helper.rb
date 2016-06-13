@@ -9,6 +9,8 @@ require File.expand_path('../../config/environment', __FILE__)
 require 'rails/test_help'
 require 'codeclimate-test-reporter'
 
+require 'mocha/test_unit'
+
 # Coverage tests
 CodeClimate::TestReporter.start
 
