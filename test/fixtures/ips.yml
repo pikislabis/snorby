@@ -7,7 +7,13 @@
 one:
   sid: 1
   cid: 1
+  ip_src: 3232235947
+  ip_dst: 3232235787
+  ip_ver: 4
 
 two:
   sid: 1
   cid: 2
+  ip_src: 1362996854
+  ip_dst: 3232235787
+  ip_ver: 4

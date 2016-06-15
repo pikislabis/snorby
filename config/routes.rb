@@ -114,6 +114,7 @@ Snorby::Application.routes.draw do
       get :last
       get :since
       get :activity
+      post :request_packet_capture
     end
 
   end

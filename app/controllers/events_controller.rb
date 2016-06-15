@@ -65,10 +65,6 @@ class EventsController < ApplicationController
   def request_packet_capture
     @event = Event.find_by(sid: params['sid'], cid: params['cid'])
     @packet = @event.packet_capture(params)
-    respond_to do |format|
-      format.html { render layout: false }
-      format.js
-    end
   end
 
   def rule
@@ -128,11 +124,6 @@ class EventsController < ApplicationController
       Snorby::Jobs::EventMailerJob.new(params[:sid], params[:cid],
                                        params[:email])
     )
-
-    respond_to do |format|
-      format.html { render layout: false }
-      format.js
-    end
   end
 
   def create_mass_action
@@ -192,10 +183,11 @@ class EventsController < ApplicationController
   end
 
   def history
-    @events = Event.all(user_id: @current_user.id)
-                   .page(params[:page].to_i,
-                         per_page: @current_user.per_page_count,
-                         order: [:timestamp.desc])
+    @events = Event.where(user_id: @current_user.id)
+                   .paginate(page: (params[:page] || 1).to_i,
+                             per_page: @current_user.per_page_count)
+                   .order(timestamp: :desc)
+
     @classifications ||= Classification.all
   end
 
@@ -225,12 +217,14 @@ class EventsController < ApplicationController
     end
   end
 
+  # TODO: delete action if not neccessary
   def mass_create_favorite
     @events ||= Event.find_by_ids(params[:events])
     @events.each { |event| event.create_favorite unless favorite? }
     render json: {}
   end
 
+  # TODO: delete action if not neccessary
   def mass_destroy_favorite
     @events ||= Event.find_by_ids(params[:events])
     @events.each { |event| event.destroy_favorite if favorite? }
@@ -266,9 +260,9 @@ class EventsController < ApplicationController
     @user = User.find(params[:user_id])
     @user = @current_user unless @user
 
-    @events = @user.events.page(params[:page].to_i,
-                                per_page: @current_user.per_page_count,
-                                order: [:timestamp.desc])
+    @events = @user.events.paginate(page: (params[:page] || 1).to_i,
+                                    per_page: @current_user.per_page_count)
+                   .order(timestamp: :desc)
 
     @classifications ||= Classification.all
   end
@@ -310,12 +304,12 @@ class EventsController < ApplicationController
           events: @events.map(&:detailed_json),
           classifications: @classifications,
           pagination: {
-            total: @events.pager.total,
-            per_page: @events.pager.per_page,
-            current_page: @events.pager.current_page,
-            previous_page: @events.pager.previous_page,
-            next_page: @events.pager.next_page,
-            total_pages: @events.pager.total_pages
+            total: @events.total_entries,
+            per_page: @events.per_page,
+            current_page: @events.current_page,
+            previous_page: @events.previous_page,
+            next_page: @events.next_page,
+            total_pages: @events.total_pages
           }
         }
       end

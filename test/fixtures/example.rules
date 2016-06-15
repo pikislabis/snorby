@@ -1,0 +1,1 @@
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"dnp3: DNP3 Application-Layer Fragment uses a reserved function code."; sid:6; gid:145; rev:1;)

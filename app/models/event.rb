@@ -1,4 +1,5 @@
 require 'netaddr'
+require 'csv'
 
 class Event < ActiveRecord::Base
   #
@@ -202,14 +203,12 @@ class Event < ActiveRecord::Base
     end
   end
 
-  def packet_capture(params={})
+  def packet_capture(params = {})
     case Setting.find(:packet_capture_type).to_sym
     when :openfpc
-      Snorby::Plugins::OpenFPC.new(self,params).to_s
+      Snorby::Plugins::OpenFPC.new(self, params).to_s
     when :solera
-      Snorby::Plugins::Solera.new(self,params).to_s
-    else
-      nil
+      Snorby::Plugins::Solera.new(self, params).to_s
     end
   end
 
@@ -404,7 +403,7 @@ class Event < ActiveRecord::Base
     events = []
     ids.split(',').collect do |e|
       event = e.split('-')
-      events << get(event.first, event.last)
+      events << find_by(sid: event.first, cid: event.last)
     end
     return events
   end
@@ -492,8 +491,10 @@ class Event < ActiveRecord::Base
     end
 
     geoip = Setting.geoip?
-    events = Event.all(:timestamp.gt => Time.zone.parse(time.to_s), :classification_id => nil, :order => [:timestamp.desc])
-    json = {:events => []}
+    events = Event.where(classification_id: nil)
+                  .where('timestamp > ?', Time.zone.parse(time.to_s))
+                  .order(timestamp: :desc)
+    json = { events: [] }
 
     events.each do |event|
       ip = event.ip
@@ -581,11 +582,11 @@ class Event < ActiveRecord::Base
   end
 
   def rule
-    @rule = Snorby::Rule.get({
-      :rule_id => signature.sig_sid,
-      :generator_id => signature.sig_gid,
-      :revision_id => signature.sig_rev
-    })
+    @rule = Snorby::Rule.get(
+      rule_id: signature.sig_sid,
+      generator_id: signature.sig_gid,
+      revision_id: signature.sig_rev
+    )
 
     @rule if @rule.found?
   end
@@ -849,4 +850,19 @@ class Event < ActiveRecord::Base
     {}
   end
 
+  def to_csv
+    CSV.generate do |csv|
+      csv << Event.attribute_names
+      csv << attributes.values
+    end
+  end
+
+  def self.to_csv
+    CSV.generate do |csv|
+      csv << Event.attribute_names
+      all.each do |event|
+        csv << event.attributes.values
+      end
+    end
+  end
 end

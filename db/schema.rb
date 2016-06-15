@@ -173,8 +173,8 @@ ActiveRecord::Schema.define(version: 20160527182126) do
   create_table "iphdr", id: false, force: :cascade do |t|
     t.integer "sid",      limit: 4,             null: false
     t.integer "cid",      limit: 4,             null: false
-    t.integer "ip_src",   limit: 4, default: 0, null: false
-    t.integer "ip_dst",   limit: 4, default: 0, null: false
+    t.integer "ip_src",   limit: 8, default: 0, null: false
+    t.integer "ip_dst",   limit: 8, default: 0, null: false
     t.integer "ip_ver",   limit: 4, default: 0, null: false
     t.integer "ip_hlen",  limit: 4, default: 0, null: false
     t.integer "ip_tos",   limit: 4, default: 0, null: false
