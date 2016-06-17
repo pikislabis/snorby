@@ -1,5 +1,4 @@
 class SignaturesController < ApplicationController
-
   before_filter :require_administrative_privileges
   helper_method :sort_column, :sort_direction
 
@@ -9,24 +8,25 @@ class SignaturesController < ApplicationController
     @signatures = Signature.sorty(params)
   end
 
-  def update
-    @signature = signature.find(params[:id])
-    if @signature.update(params[:signature])
-      redirect_to signatures_path, :notice => 'Signature Updated Successfully.'
-    else
-      render :action => 'edit', :notice => 'Error: Unable To Save Record.'
-    end
-  end
-
-  def edit
-    @signature = signature.find(params[:id])
-  end
-
-  def destroy
-    @signature = signature.find(params[:id])
-    @signature.destroy
-    redirect_to signatures_path, :notice => 'Signature Removed Successfully.'
-  end
+  # TODO: Check if neccessary
+  # def update
+  #   @signature = Signature.find(params[:id])
+  #   if @signature.update(params[:signature])
+  #     redirect_to signatures_path, notice: 'Signature Updated Successfully.'
+  #   else
+  #     render action: 'edit', notice: 'Error: Unable To Save Record.'
+  #   end
+  # end
+  #
+  # def edit
+  #   @signature = Signature.find(params[:id])
+  # end
+  #
+  # def destroy
+  #   @signature = signature.find(params[:id])
+  #   @signature.destroy
+  #   redirect_to signatures_path, notice: 'Signature Removed Successfully.'
+  # end
 
   def search
     @total ||= Event.count
@@ -37,7 +37,7 @@ class SignaturesController < ApplicationController
         total: @total
       }
     else
-      render json: { signatures => [] }
+      render json: { signatures: [] }
     end
   end
 
@@ -49,7 +49,10 @@ class SignaturesController < ApplicationController
   end
 
   def sort_direction
-    %w[asc desc].include?(params[:direction].to_s) ? params[:direction].to_sym : :desc
+    if %w(asc desc).include?(params[:direction].to_s)
+      params[:direction].to_sym
+    else
+      :desc
+    end
   end
-
 end
