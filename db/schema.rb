@@ -291,7 +291,8 @@ ActiveRecord::Schema.define(version: 20160527182126) do
   add_index "sensor", ["last_cid"], name: "index_sensor_last_cid", using: :btree
   add_index "sensor", ["sid"], name: "index_sensor_sid", using: :btree
 
-  create_table "settings", primary_key: "name", force: :cascade do |t|
+  create_table "settings", force: :cascade do |t|
+    t.string "name", limit: 50
     t.text "value", limit: 16777215
   end
 

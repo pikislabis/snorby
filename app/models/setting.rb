@@ -14,6 +14,8 @@ class Setting < ActiveRecord::Base
     :geoip
   ].freeze
 
+  validates :name, uniqueness: true
+
   # property :name, String, :key => true, :index => true, :required => false
   #
   # property :value, Object
