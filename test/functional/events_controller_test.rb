@@ -3,6 +3,7 @@ require 'test_helper'
 class EventsControllerTest < ActionController::TestCase
   context 'normal user' do
     setup do
+      Whois::Client.any_instance.stubs(:lookup).returns('')
       @user = users(:user)
       @event = events(:one)
       @event_2 = events(:two)
@@ -38,7 +39,6 @@ class EventsControllerTest < ActionController::TestCase
     should 'request packet capture' do
       start_time = Time.now - 1.hour
       end_time = Time.now
-      Setting.stubs(:find).with(:packet_capture_type).returns('openfpc')
       post :request_packet_capture, sid: @event.sid, cid: @event.cid,
                                     start_time: { '(1i)' => start_time.year.to_s,
                                                   '(2i)' => start_time.month.to_s,
@@ -151,7 +151,6 @@ class EventsControllerTest < ActionController::TestCase
     end
 
     should 'lookup event source IP' do
-      Setting.stubs(:lookups?).returns(true)
       get :lookup, address: @event.ip.ip_src
       assert_response :success
     end

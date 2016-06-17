@@ -4,6 +4,75 @@
 # model remove the '{}' from the fixture names and add the columns immediately
 # below each fixture, per the syntax in the comments below
 #
+
+company:
+  name: company
+  value: Snorby
+
+email:
+  name: email
+  value: snorby@example.com
+
+signature_lookup:
+  name: signature_lookup
+  value: 'http://rootedyour.com/snortsid?sid=$$gid$$:$$sid$$'
+
+daily:
+  name: daily
+  value: 1
+
+weekly:
+  name: weekly
+  value: 1
+
+monthly:
+  name: monthly
+  value: 1
+
+lookups:
+  name: lookups
+  value: 1
+
+utc:
+  name: utc
+  value: 0
+
+notes:
+  name: notes
+  value: 1
+
+geoip:
+  name: geoip
+  value: 0
+
+event_notifications:
+  name: event_notifications
+  value: 0
+
+update_notifications:
+  name: update_notifications
+  value: 0
+
+packet_capture_url:
+  name: packet_capture_url
+  value:
+
+packet_capture:
+  name: packet_capture
+  value:
+
 packet_capture_type:
   name: packet_capture_type
   value: openfpc
+
+packet_capture_auto_auth:
+  name: packet_capture_auto_auth
+  value: 1
+
+packet_capture_user:
+  name: packet_capture_user
+  value:
+
+packet_capture_password:
+  name: packet_capture_password
+  value:
