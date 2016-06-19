@@ -1,5 +1,4 @@
 Snorby::Application.routes.draw do
-
   resources :lookups
 
   # This feature is not ready yet
@@ -14,16 +13,15 @@ Snorby::Application.routes.draw do
 
   resources :classifications
 
-  devise_for :users, :path_names => { :sign_in => 'login',
-    :sign_out => 'logout',
-    :sign_up => 'register' }, :controllers => {
-      :registrations => "registrations",
-      :sessions => "sessions",
-      :passwords => 'passwords'
-    } do
-    get "/login" => "devise/sessions#new"
-    delete '/logout', :to => "devise/sessions#destroy"
-    get '/reset/password', :to => "devise/passwords#edit"
+  devise_for :users, path_names: { sign_in: 'login',
+                                   sign_out: 'logout',
+                                   sign_up: 'register' },
+                     controllers: { registrations: 'registrations',
+                                    sessions: 'sessions',
+                                    passwords: 'passwords' } do
+    get '/login' => 'devise/sessions#new'
+    delete '/logout', to: 'devise/sessions#destroy'
+    get '/reset/password', to: 'devise/passwords#edit'
   end
 
   root to: 'page#dashboard'
@@ -72,7 +70,7 @@ Snorby::Application.routes.draw do
     end
   end
 
-  get ':controller(/:action(/:sid/:cid))', :controller => 'events'
+  get ':controller(/:action(/:sid/:cid))', controller: 'events'
 
   resources :asset_names do
     member do
@@ -88,10 +86,7 @@ Snorby::Application.routes.draw do
   end
 
   resources :events do
-
-    resources :notes do
-
-    end
+    resources :notes
 
     collection do
       get :sessions
@@ -116,7 +111,6 @@ Snorby::Application.routes.draw do
       get :activity
       post :request_packet_capture
     end
-
   end
 
   resources :notes
