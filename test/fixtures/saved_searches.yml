@@ -1,0 +1,41 @@
+one:
+  user: admin
+  public: true
+  title: Search One
+  search:
+    match_all: true
+    search:
+      0:
+        column: source_ip
+        operator: is
+        value: 8.8.8.8
+        enabled: true
+  checksum: 2565745114ddcfb565c3bcd38a7fb9b7e1f0ae1566bdb40cf3ed53b3f7716d8b
+
+two:
+  user: admin
+  public: false
+  title: Search Two
+  search:
+    match_all: true
+    search:
+      0:
+        column: source_ip
+        operator: is
+        value: 8.8.4.4
+        enabled: true
+  checksum: zlEo3a9PYU2vLnuZiAuu45rd4zYitAC5fBtNVqq37PczRJL8Npv6ADXVQz2E5Z7K
+
+three:
+  user: user
+  public: false
+  title: Search Three
+  search:
+    match_all: true
+    search:
+      0:
+        column: source_ip
+        operator: is
+        value: 8.8.3.3
+        enabled: true
+  checksum: J6G8RsWK1scu4OizxNJZZVhJtbk4BFbB51RP8Wr46kCQzLCaajpschQiA6gHsUJx
