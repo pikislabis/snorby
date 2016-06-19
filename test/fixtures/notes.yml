@@ -1,0 +1,5 @@
+one:
+  user: admin
+  sid: 1
+  cid: 1
+  body: Text for note one
