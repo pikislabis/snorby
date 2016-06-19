@@ -1,7 +1,6 @@
 source 'https://rubygems.org'
 
-RAILS_VERSION = '4.2.6'
-RSPEC_VERSION = '~> 2.0.0'
+RAILS_VERSION = '4.2.6'.freeze
 
 gem 'rails', RAILS_VERSION
 
@@ -62,7 +61,8 @@ gem 'netaddr',                     '~> 1.5.1'
 gem 'timezone_local',              '~> 0.1.5'
 
 group :development, :test do
-  # Call 'byebug' anywhere in the code to stop execution and get a debugger console
+  # Call 'byebug' anywhere in the code to stop execution and get a
+  # debugger console
   gem 'byebug'
   gem 'pry-rails'
   gem 'pry-nav'
