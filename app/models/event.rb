@@ -245,6 +245,10 @@ class Event < ActiveRecord::Base
   #  all(:order => column.to_sym.send(order.to_sym))
   #end
 
+  def secondary_id
+    "#{sid}_#{cid}"
+  end
+
   def to_param
     "#{sid},#{cid}"
   end

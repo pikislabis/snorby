@@ -1,26 +1,32 @@
 <div class='section-title plus'>Notes</div>
 
-<div id='notes_<%= @event.id %>' class='notes plus'>
-	
+<div id='notes_<%= @event.secondary_id %>' class='notes plus'>
+
 	<% if @notes.blank? %>
 		<strong class='no-notes'>
 			This event currently has zero notes - You can add a note by clicking the button below.<br />
 			<br />
 		</strong>
 	<% else %>
-    
+
     <%= render @notes %>
-		<%= pager(@notes, "#{Snorby::CONFIG[:baseuri]}/events/show/#{@event.sid}/#{@event.cid}", false) %>
-		
+		<%= will_paginate @notes %>
+
+		<script type="text/javascript">
+		$(function(){
+		 $('.notes .pagination a').attr('data-remote', 'true')
+		});
+		</script>
+
 	<% end %>
-	
+
 	<div id='new_note' class='fake_form' data-event-sid='<%= @event.sid %>' data-event-cid='<%= @event.cid %>'>
 		<%= text_area_tag :body, {}, :style => 'display:none;' %>
-		
+
 		<%= form_actions do %>
       <%= button "Add A Note To This Event", :style => "width:169px;", :class => 'add_new_note' %>
 		<% end %>
-		
+
 	</div>
-	
+
 </div>

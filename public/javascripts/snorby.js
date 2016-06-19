@@ -1419,7 +1419,7 @@ var Snorby = {
 					var current_width = $(this).width();
 					$(this).addClass('loading').css('width', current_width);
 
-					$.post(baseuri + '/notes/create', { sid: event_sid, cid: event_cid, body: note_body, authenticity_token: csrf}, null, 'script');
+					$.post(baseuri + '/notes', { sid: event_sid, cid: event_cid, body: note_body, authenticity_token: csrf }, null, 'script');
 
 				} else {
 					flash_message.push({type: "error", message: "The note body cannot be blank!"});
