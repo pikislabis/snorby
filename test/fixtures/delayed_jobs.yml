@@ -1,0 +1,12 @@
+one:
+  priority: 1,
+  attempts: 0,
+  handler: "--- !ruby/struct:Snorby::Jobs::GeoipUpdatedbJob\nverbose: false\n"
+  run_at: <%= Time.now + 5.minutes %>
+
+two:
+  priority: 0
+  attempts: 0
+  handler: "--- !ruby/struct:Snorby::Jobs::NoteNotification\nnote_id: 6\n"
+  run_at: <%= Time.now + 5.minutes %>
+  last_error: "Error text"

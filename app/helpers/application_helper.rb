@@ -56,7 +56,7 @@ module ApplicationHelper
   def title(header, title=nil, menu_content=true, &block)
     show_title(title ? title : header)
     title_header = content_tag(:div, header, :id => 'title-header', :class => 'grid_6')
-    
+
     if block_given?
       data = capture(&block).gsub("\n|\t", '')
 
@@ -78,9 +78,9 @@ module ApplicationHelper
     title ||= column.titleize
 
     css_class = column == sort_column ? "current #{sort_direction} add_tipsy table-sort-link" : 'add_tipsy table-sort-link'
-    
+
     direction = column == sort_column && sort_direction == :desc ? :asc : :desc
-    
+
     link = {
       :sort => column,
       :direction => direction
@@ -151,12 +151,12 @@ module ApplicationHelper
     image = image_path ? "#{image_tag(image_path)} " : ""
     unless (name || path).blank?
       content_tag(:li, "#{link_to "#{image}#{name}".html_safe, path, options}".html_safe)
-    end 
+    end
   end
 
   def snorby_box(title, normal_size=true, &block)
     html = content_tag(:div, title, :id => 'box-title')
-    
+
     if normal_size
       html += content_tag(:div, capture(&block), :id => 'box-content')
     else
@@ -165,7 +165,7 @@ module ApplicationHelper
 
     content_tag(:div, html, :id => 'snorby-box', :class => 'snorby-box')
   end
-  
+
   def snorby_box_footer(&block)
     html = ''
     html = capture(&block) if block
@@ -188,14 +188,14 @@ module ApplicationHelper
     content_tag(:div, html, :class => klass)
   end
 
-  def worker_status(show_image=false)
+  def worker_status(show_image = false)
+    validations = [
+      { check: DelayedJob.sensor_cache?, enabled: true, desc: 'Sensor Cache Job' },
+      { check: DelayedJob.geoip_update?, enabled: Setting.geoip?, desc: 'GeoIP Update Job' }
+    ]
 
-    validations = [{:check => Snorby::Jobs.sensor_cache?, :enabled => true, :desc => "Sensor Cache Job"},
-                   {:check=> Snorby::Jobs.geoip_update?, :enabled => Setting.geoip?, :desc => "GeoIP Update Job"}
-                  ]
-
-    # Just check for enabled jobs              
-    items_to_check = validations.select{|h| h[:enabled] == true} 
+    # Just check for enabled jobs
+    items_to_check = validations.select { |h| h[:enabled] == true }
 
     if items_to_check.select{|h| h[:check] == true}.count == items_to_check.count
       return content_tag(:span, "OK", :class => 'status ok add_tipsy', :title => 'Success: Everything Looks Good!')
@@ -210,8 +210,8 @@ module ApplicationHelper
 
   #
   # Percentage Helper
-  # 
-  # Used for generating customized 
+  #
+  # Used for generating customized
   # percentages used in the view and pdf
   # reports. This method will protect
   # impossible percentages.
@@ -219,9 +219,9 @@ module ApplicationHelper
   # @param [Integer] count Count from total
   # @param [Integer] total The total count
   # @param [Integer] round Rounding Option
-  # 
+  #
   # @return [Integer] percentage
-  # 
+  #
   def percentage_for(count, total, round=2)
     begin
       percentage = ((count.to_f / total.to_f) * 100).round(round)
@@ -236,12 +236,12 @@ module ApplicationHelper
   def clippy(text, bgcolor='#FFFFFF', id=0)
     html = <<-EOF
       <span style="display:none" id="clippy_#{id}" class="ip-copy">#{text}</span>
-      <span id="main_clippy_#{id}" class="add_tipsy clippy" 
+      <span id="main_clippy_#{id}" class="add_tipsy clippy"
       original-title="copied!" title="copy to clipboard">
-        <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" 
-                width="14" 
-                height="14" 
-                class="clippy" 
+        <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
+                width="14"
+                height="14"
+                class="clippy"
                 id="clippy">
         <param name="movie" value="#{Snorby::CONFIG[:baseuri]}/flash/clippy.swf">
         <param name="allowScriptAccess" value="always">
@@ -250,16 +250,16 @@ module ApplicationHelper
         <param name="FlashVars" value="id=clippy_#{id}&amp;copied=&amp;copyto=">
         <param name="bgcolor" value="#{bgcolor}">
         <param name="wmode" value="opaque">
-        <embed src="#{Snorby::CONFIG[:baseuri]}/flash/clippy.swf" 
-               width="14" 
-               height="14" 
-               name="clippy" 
-               quality="high" 
-               allowscriptaccess="always" 
-               type="application/x-shockwave-flash" 
-               pluginspage="http://www.macromedia.com/go/getflashplayer" 
-               flashvars="id=clippy_#{id}&amp;copied=&amp;copyto=" 
-               bgcolor="#{bgcolor}" 
+        <embed src="#{Snorby::CONFIG[:baseuri]}/flash/clippy.swf"
+               width="14"
+               height="14"
+               name="clippy"
+               quality="high"
+               allowscriptaccess="always"
+               type="application/x-shockwave-flash"
+               pluginspage="http://www.macromedia.com/go/getflashplayer"
+               flashvars="id=clippy_#{id}&amp;copied=&amp;copyto="
+               bgcolor="#{bgcolor}"
                wmode="opaque">
         </object>
       </span>
@@ -267,7 +267,7 @@ module ApplicationHelper
 
     html.html_safe
   end
- 
+
   #
   # Ref Render
   #
