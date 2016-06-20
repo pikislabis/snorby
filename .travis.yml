@@ -16,5 +16,6 @@ before_install:
 before_script:
   - mysql -e 'create database snorby_test;'
   - bundle exec rake db:schema:load RAILS_ENV=test
+  - bundle exec rake snorby:start_worker RAILS_ENV=test
 script:
   - bundle exec rake test
