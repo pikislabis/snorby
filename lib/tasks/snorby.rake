@@ -100,14 +100,13 @@ namespace :snorby do
 
       count = 0
       ready = false
-      until ready
 
+      until ready
         ready = true if Snorby::Worker.running?
         sleep 5
 
         count += 1
-        ready  = true if count > 10
-        end
+        ready = true if count > 10
       end
 
 
