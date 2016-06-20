@@ -71,8 +71,7 @@ namespace :snorby do
   end
 
   desc 'Restart Worker/Jobs'
-  task :restart_worker => :environment do
-
+  task restart_worker: :environment do
     if Snorby::Worker.running?
       puts '* Stopping the Snorby worker process.'
       Snorby::Worker.stop
@@ -80,35 +79,34 @@ namespace :snorby do
 
     count = 0
     stopped = false
-    while !stopped
+    until stopped
 
       stopped = true unless Snorby::Worker.running?
       sleep 5
 
       count += 1
       if count > 10
-        STDERR.puts "[X] Error: Unable to stop the Snorby worker process."
-        exit -1
+        STDERR.puts '[X] Error: Unable to stop the Snorby worker process.'
+        exit(-1)
       end
     end
 
     unless Snorby::Worker.running?
-      puts "* Removing old jobs"
-      Snorby::Jobs.find.all.destroy
+      puts '* Removing old jobs'
+      DelayedJob.destroy_all
 
-      puts "* Starting the Snorby worker process."
+      puts '* Starting the Snorby worker process.'
       Snorby::Worker.start
 
       count = 0
       ready = false
-      while !ready
+      until ready
 
         ready = true if Snorby::Worker.running?
         sleep 5
 
         count += 1
-        if count > 10
-          ready  = true
+        ready  = true if count > 10
         end
       end
 
@@ -119,10 +117,9 @@ namespace :snorby do
         Snorby::Jobs.run_now!
       else
         STDERR.puts "[X] Error: Unable to start the Snorby worker process."
-        exit -1
+        exit(-1)
       end
     end
-
   end
 
   desc 'Soft Reset - Reset Snorby metrics'
@@ -150,7 +147,7 @@ namespace :snorby do
 
   # TODO: improve to execute only one UPDATE per cache.
   desc 'Migrate to Rails 4 and ActiveRecord'
-  task :migrate_to_rails4 => :environment do
+  task migrate_to_rails4: :environment do
     @adapter ||= ActiveRecord::Base.connection
 
     Cache.all.each do |cache|
@@ -180,6 +177,8 @@ namespace :snorby do
       value = Marshal.load(Base64.decode64(setting.value))
       setting.update(value: value)
     end
+
+    # rails generate delayed_job:upgrade
   end
 
 end
