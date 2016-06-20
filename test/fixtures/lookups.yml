@@ -1,0 +1,3 @@
+one:
+  title: Lookup One
+  value: "http://www.example.com/lookup?address=${ip}"
