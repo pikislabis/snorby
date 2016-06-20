@@ -1,26 +1,16 @@
 class LookupsController < ApplicationController
-
   before_filter :require_administrative_privileges
 
   # GET /lookups
   # GET /lookups.xml
   def index
-    @lookups = Lookup.all.paginate(page: (params[:page] || 1).to_i, per_page: @current_user.per_page_count).order('id ASC')
+    @lookups = Lookup.all.paginate(page: (params[:page] || 1).to_i,
+                                   per_page: @current_user.per_page_count)
+                     .order('id ASC')
 
     respond_to do |format|
       format.html # index.html.erb
-      format.xml  { render :xml => @lookups }
-    end
-  end
-
-  # GET /lookups/1
-  # GET /lookups/1.xml
-  def show
-    @lookup = Lookup.find(params[:id])
-
-    respond_to do |format|
-      format.html # show.html.erb
-      format.xml  { render :xml => @lookup }
+      format.xml  { render xml: @lookups }
     end
   end
 
@@ -31,7 +21,7 @@ class LookupsController < ApplicationController
 
     respond_to do |format|
       format.html # new.html.erb
-      format.xml  { render :xml => @lookup }
+      format.xml  { render xml: @lookup }
     end
   end
 
@@ -43,15 +33,15 @@ class LookupsController < ApplicationController
   # POST /lookups
   # POST /lookups.xml
   def create
-    @lookup = Lookup.new(params[:lookup])
+    @lookup = Lookup.new(lookup_params)
 
     respond_to do |format|
       if @lookup.save
-        format.html { redirect_to(lookups_url, :notice => 'Lookup source successfully created.') }
-        format.xml  { render :xml => @lookup, :status => :created, :location => @lookup }
+        format.html { redirect_to lookups_url, notice: 'Lookup source successfully created.' }
+        format.xml  { render xml: @lookup, status: :created, location: @lookup }
       else
-        format.html { render :action => "new" }
-        format.xml  { render :xml => @lookup.errors, :status => :unprocessable_entity }
+        format.html { render action: 'new' }
+        format.xml { render xml: @lookup.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -62,12 +52,12 @@ class LookupsController < ApplicationController
     @lookup = Lookup.find(params[:id])
 
     respond_to do |format|
-      if @lookup.update(params[:lookup])
-        format.html { redirect_to(lookups_url, :notice => 'Lookup source successfully updated.') }
+      if @lookup.update(lookup_params)
+        format.html { redirect_to lookups_url, notice: 'Lookup source successfully updated.' }
         format.xml  { head :ok }
       else
-        format.html { render :action => "edit" }
-        format.xml  { render :xml => @lookup.errors, :status => :unprocessable_entity }
+        format.html { render action: 'edit' }
+        format.xml { render xml: @lookup.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -79,8 +69,14 @@ class LookupsController < ApplicationController
     @lookup.destroy
 
     respond_to do |format|
-      format.html { redirect_to(lookups_url, :notice => 'Lookup source removed successfully.') }
+      format.html { redirect_to lookups_url, notice: 'Lookup source removed successfully.' }
       format.xml  { head :ok }
     end
+  end
+
+  private
+
+  def lookup_params
+    params.require(:lookup).permit(:title, :value)
   end
 end
