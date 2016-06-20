@@ -60,11 +60,8 @@ namespace :snorby do
   end
 
   desc 'Start Snorby Worker if not running'
-  task :start_worker => :environment do
-
-    if Snorby::Worker.running?
-      exit 0
-    end
+  task start_worker: :environment do
+    exit 0 if Snorby::Worker.running?
 
     # otherwise, restart worker.
     Rake::Task['snorby:restart_worker'].invoke
@@ -109,13 +106,12 @@ namespace :snorby do
         ready = true if count > 10
       end
 
-
       if Snorby::Worker.running?
-        Snorby::Jobs.find.all.destroy
-        puts "* Adding jobs to the queue"
-        Snorby::Jobs.run_now!
+        DelayedJob.destroy_all
+        puts '* Adding jobs to the queue'
+        DelayedJob.run_now!
       else
-        STDERR.puts "[X] Error: Unable to start the Snorby worker process."
+        STDERR.puts '[X] Error: Unable to start the Snorby worker process.'
         exit(-1)
       end
     end
