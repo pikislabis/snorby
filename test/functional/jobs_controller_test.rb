@@ -7,6 +7,13 @@ class JobsControllerTest < ActionController::TestCase
       @job_one = delayed_jobs(:one)
       @job_two = delayed_jobs(:two)
       sign_in @admin
+
+      # stubs process info
+      Snorby::Process.stubs(:initialize)
+                     .returns(
+                       ['user', '1111', '0,0', '1,1', '1111', '1111', 's000',
+                        'S+', '0:00PM', '00:00', 'delayed_job']
+                     )
     end
 
     should 'get index' do
