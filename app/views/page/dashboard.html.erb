@@ -111,7 +111,7 @@
         "match_all"=>"true", "search"=>{"sensor"=>{"column"=>"sensor", "operator"=>"is", "value"=> sensor.sid } }), :title => sensor.sensor_name %>
 
         <span>
-          <%= number_with_delimiter (sensor.events_count.zero? ? Event.count(:sid => sensor.sid) : sensor.events_count) %>
+          <%= number_with_delimiter (sensor.events_count.zero? ? Event.where(sid: sensor.sid).count : sensor.events_count) %>
         </span>
       </li>
 			<% end %>

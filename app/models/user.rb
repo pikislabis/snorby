@@ -112,7 +112,7 @@ class User < ActiveRecord::Base
   end
 
   def classify_count
-    Event.count(:user_id => self.id.to_i)
+    Event.where(user_id: id).count
   end
 
   def send_daily_report(start_time, end_time)
