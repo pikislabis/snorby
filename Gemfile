@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-RAILS_VERSION = '4.2.6'.freeze
+RAILS_VERSION = '4.2.7.1'.freeze
 
 gem 'rails', RAILS_VERSION
 
