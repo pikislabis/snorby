@@ -7,9 +7,10 @@ class Reference < ActiveRecord::Base
   #
   # property :ref_tag, Text
 
-  belongs_to :sig_reference, foreign_key: :ref_id, primary_key: [:ref_id]
+  belongs_to :sig_reference, foreign_key: :ref_id, primary_key: :ref_id
 
-  belongs_to :reference_system, foreign_key: :ref_system_id, primary_key: [:ref_system_id]
+  belongs_to :reference_system, foreign_key: :ref_system_id,
+                                primary_key: :ref_system_id
 
   def value
     ref_tag
@@ -18,5 +19,4 @@ class Reference < ActiveRecord::Base
   def type
     reference_system.present? ? reference_system.ref_system_name : 'N/A'
   end
-
 end
