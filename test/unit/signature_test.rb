@@ -3,7 +3,7 @@ require 'test_helper'
 class SignatureTest < ActiveSupport::TestCase
   context 'A signature' do
     setup do
-      @signature = Signature.new
+      @signature = signatures(:one)
     end
 
     should 'be 0 for event percentage if there is no events' do
