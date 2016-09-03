@@ -10,7 +10,7 @@ gem 'bundler',       '~> 1.12'
 gem 'request_store', '~> 1.3.1'
 
 gem 'jquery-rails',  '~> 4.1'
-gem 'json',          '~> 1.8.3'
+gem 'json',          '~> 1.8'
 gem 'env'
 
 # Jruby
@@ -25,12 +25,12 @@ gem 'home_run',                    require: 'date', platforms: :mri
 gem 'mysql2',                      '0.4.4'
 
 # Deploy with Capistrano
-gem 'capistrano',                  '3.5.0'
+gem 'capistrano',                  '3.6.1'
 
 # Rails Plugins
 gem 'jammit',                      '~> 0.7.0'
 gem 'cancan',                      '~> 1.6'
-gem 'devise',                      '~> 4.1.1'
+gem 'devise',                      '~> 4.2'
 gem 'rubycas-client'
 gem 'devise_cas_authenticatable'
 gem 'mail',                        '~> 2.6'
@@ -54,7 +54,7 @@ gem 'composite_primary_keys',      '~> 8.1'
 
 gem 'net-dns',                     '~> 0.8.0'
 gem 'whois',                       '~> 3.6.5'
-gem 'simple_form',                 '~> 3.2.1'
+gem 'simple_form',                 '~> 3.3'
 gem 'geoip',                       '~> 1.6.1'
 gem 'netaddr',                     '~> 1.5.1'
 # gem 'dm-zone-types',               '~> 0.3'
