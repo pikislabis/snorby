@@ -43,17 +43,15 @@ class Signature < ActiveRecord::Base
   #
   #
   #
-  def event_percentage(in_words=false, count=Event.count)
-    begin
-      if in_words
-        "#{self.events_count}/#{count}"
-      else
-        return 0 if Event.count.zero?
-         "%.2f" % ((self.events_count.to_f / count.to_f) * 100).round(2)
-      end
-    rescue FloatDomainError
-      0
+  def event_percentage(in_words = false, count = Event.count)
+    if in_words
+      "#{events_count}/#{count}"
+    else
+      return 0 if count.zero?
+      format('%.2f', ((events_count.to_f / count.to_f) * 100).round(2))
     end
+  rescue FloatDomainError
+    0
   end
 
   def self.sorty(params = {})
