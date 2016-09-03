@@ -12,11 +12,12 @@ class SettingsController < ApplicationController
       name = setting.name
 
       if @params.keys.include?(name)
-        if @params[name].is_a?(ActionDispatch::Http::UploadedFile)
-          Setting.file(name, @params[name])
-        else
-          setting.update(value: @params[name])
-        end
+        # TODO: feature for changing the app logo
+        # if @params[name].is_a?(ActionDispatch::Http::UploadedFile)
+        #   Setting.file(name, @params[name])
+        # else
+        setting.update(value: @params[name])
+        # end
       elsif setting.checkbox?
         setting.update(value: nil)
       end

@@ -46,24 +46,22 @@ class Setting < ActiveRecord::Base
     false
   end
 
-  def self.file(name, file)
-    new_file_name = file.original_filename.sub(/(\w+)(?=\.)/, "#{name}")
-    new_file_path = "#{Rails.root.to_s}/public/system/#{new_file_name}"
-
-    FileUtils.mv(file.tempfile.path, new_file_path)
-    self.set(:logo, "#{Snorby::CONFIG[:baseuri]}/system/#{new_file_name}")
-  end
+  # TODO: function for change the app logo
+  # def self.file(name, file)
+  #   new_file_name = file.original_filename.sub(/(\w+)(?=\.)/, name.to_s)
+  #   new_file_path = "#{Rails.root}/public/system/#{new_file_name}"
+  #
+  #   FileUtils.mv(file.tempfile.path, new_file_path)
+  #   set(:logo, "#{Snorby::CONFIG[:baseuri]}/system/#{new_file_name}")
+  # end
 
   def self.method_missing(method, *args)
-    if method.to_s.match(/^all/)
-      super
-    elsif method.to_s.match(/^(.*)=$/)
-      return Setting.set($1, args.first)
-    elsif method.to_s.match(/^(.*)\?$/)
-      Setting.has_setting($1.to_sym)
+    if method.to_s =~ /^(.*)=$/
+      Setting.set(Regexp.last_match(1), args.first)
+    elsif method.to_s =~ /^(.*)\?$/
+      Setting.has_setting(Regexp.last_match(1).to_sym)
     else
-      return Setting.find(method.to_sym)
+      Setting.find(method.to_sym)
     end
   end
-
 end
