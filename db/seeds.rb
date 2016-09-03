@@ -7,7 +7,7 @@ User.create(:name => 'Administrator', :email => 'snorby@example.com', :password 
 # Snorby General Settings
 Setting.set(:company, 'Snorby') unless Setting.company?
 Setting.set(:email, 'snorby@example.com') unless Setting.email?
-Setting.set(:signature_lookup, 'http://rootedyour.com/snortsid?sid=$$gid$$:$$sid$$') unless Setting.signature_lookup?
+Setting.set(:signature_lookup, 'http://rootedyour.com/snortsid?sid=$$gid$$-$$sid$$') unless Setting.signature_lookup?
 Setting.set(:daily, 1) unless Setting.daily?
 Setting.set(:weekly, 1) unless Setting.weekly?
 Setting.set(:monthly, 1) unless Setting.monthly?
