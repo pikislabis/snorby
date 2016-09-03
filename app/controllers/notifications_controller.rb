@@ -1,11 +1,13 @@
 class NotificationsController < ApplicationController
-
   def index
-    @notifications = Notification.all.page(params[:page].to_i, :per_page => @current_user.per_page_count, :order => [:created_at])
+    @notifications = Notification.all
+                                 .order(created_at: :desc)
+                                 .paginate(page: params[:page],
+                                           per_page: @current_user.per_page_count)
 
     respond_to do |format|
       format.html # index.html.erb
-      format.xml  { render :xml => @notifications }
+      format.xml  { render xml: @notifications }
     end
   end
 
@@ -13,19 +15,22 @@ class NotificationsController < ApplicationController
     @notification = Notification.find(params[:id])
 
     respond_to do |format|
-      format.html # show.html.erb
-      format.xml  { render :xml => @notification }
+      format.html { render layout: false }
+      format.xml  { render xml: @notification }
     end
   end
 
   def new
-    @notification = Notification.new
-    @event = Event.find_by(sid: params[:sid], cid: params[:cid])
-    render :layout => false
+    event = Event.find_by(sid: params[:sid], cid: params[:cid])
+    @notification = Notification.new(sig_id: event.signature.sig_id,
+                                     ip_src: event.ip.ip_src.to_s,
+                                     ip_dst: event.ip.ip_dst.to_s)
+    render layout: false
   end
 
   def edit
     @notification = Notification.find(params[:id])
+    render layout: false
   end
 
   def create
@@ -48,10 +53,9 @@ class NotificationsController < ApplicationController
     @notification.save
 
     respond_to do |format|
-      format.html { render :layout => false }
+      format.html { render layout: false }
       format.js
     end
-
   end
 
   def update
@@ -59,11 +63,11 @@ class NotificationsController < ApplicationController
 
     respond_to do |format|
       if @notification.update(params[:notification])
-        format.html { redirect_to(@notification, :notice => 'Notification was successfully updated.') }
+        format.html { redirect_to(@notification, notice: 'Notification was successfully updated.') }
         format.xml  { head :ok }
       else
-        format.html { render :action => "edit" }
-        format.xml  { render :xml => @notification.errors, :status => :unprocessable_entity }
+        format.html { render action 'edit' }
+        format.xml  { render xml: @notification.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -73,7 +77,7 @@ class NotificationsController < ApplicationController
     @notification.destroy
 
     respond_to do |format|
-      format.html { redirect_to(notifications_url, :notice => 'Notification removed successfully.') }
+      format.html { redirect_to(notifications_url, notice: 'Notification removed successfully.') }
       format.xml  { head :ok }
     end
   end

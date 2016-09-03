@@ -1,8 +1,5 @@
-<p id="notice"><%= notice %></p>
-
-<p>
-  <b>Title:</b>
-  <%= @notification.title %>
+<p id="notice">
+  <%= notice %>
 </p>
 
 <p>
@@ -36,5 +33,5 @@
 </p>
 
 
-<%= link_to 'Edit', edit_notification_path(@notification) %> |
+<%= link_to 'Edit', edit_notification_path(@notification), class: 'snorbybox' %> |
 <%= link_to 'Back', notifications_path %>

@@ -27,7 +27,6 @@ class Notification < ActiveRecord::Base
   belongs_to :signature, primary_key: :sig_id, foreign_key: :sig_id
 
   def check(event)
-
     if sensor_ids.blank?
 
       puts 'nope! no sensor'

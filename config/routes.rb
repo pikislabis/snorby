@@ -2,7 +2,7 @@ Snorby::Application.routes.draw do
   resources :lookups
 
   # This feature is not ready yet
-  # resources :notifications
+  resources :notifications
 
   resources :jobs do
     member do
