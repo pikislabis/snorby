@@ -6,47 +6,54 @@ module Snorby
   module Search
 
     COLUMN = {
-      :signature => "event.signature",
-      :signature_name => "signature.sig_name",
-      :severity => "signature.sig_priority",
-      :source_ip => "iphdr.ip_src",
-      :destination_ip => "iphdr.ip_dst",
-      :tcp_source_port => "tcphdr.tcp_sport",
-      :udp_source_port => "udphdr.udp_sport",
-      :tcp_destination_port => "tcphdr.tcp_dport",
-      :udp_destination_port => "udphdr.udp_dport",
-      :source_port => {
-        :tcp => "tcphdr.tcp_sport",
-        :udp => "udphdr.udp_sport"
+      signature: 'event.signature',
+      signature_name: 'signature.sig_name',
+      severity: 'signature.sig_priority',
+      source_ip: 'iphdr.ip_src',
+      destination_ip: 'iphdr.ip_dst',
+      tcp_source_port: 'tcphdr.tcp_sport',
+      udp_source_port: 'udphdr.udp_sport',
+      tcp_destination_port: 'tcphdr.tcp_dport',
+      udp_destination_port: 'udphdr.udp_dport',
+      source_port: {
+        tcp: 'tcphdr.tcp_sport',
+        udp: 'udphdr.udp_sport'
       },
-      :destination_port => {
-        :tcp => "tcphdr.tcp_dport",
-        :udp => "udphdr.udp_dport"
+      destination_port: {
+        tcp: 'tcphdr.tcp_dport',
+        udp: 'udphdr.udp_dport'
       },
-      :classification => "event.classification_id",
-      :sensor => "event.sid",
-      :user => "event.user_id",
-      :payload => "data.data_payload",
-      :start_time => "event.timestamp",
-      :end_time => "event.timestamp",
-      :has_note => "event.notes_count"
-    }
+      classification: 'event.classification_id',
+      sensor: 'event.sid',
+      user: 'event.user_id',
+      payload: 'data.data_payload',
+      start_time: 'event.timestamp',
+      end_time: 'event.timestamp',
+      has_note: 'event.notes_count'
+    }.freeze
 
     OPERATOR = {
-      :is => "= ?",
-      :is_not => "!= ?",
-      :contains => "LIKE ?",
-      :contains_not => 'NOT LIKE ?',
-      :gte => ">= ?",
-      :lte => "<= ?",
-      :lt => "< ?",
-      :gt => "> ?",
-      :in => "IN (?)",
-      :notnull => "IS NOT NULL",
-      :isnull => "IS NULL"
-    }
+      is: '= ?',
+      is_not: '!= ?',
+      contains: 'LIKE ?',
+      contains_not: 'NOT LIKE ?',
+      gte: '>= ?',
+      lte: '<= ?',
+      lt: '< ?',
+      gt: '> ?',
+      in: 'IN (?)',
+      notnull: 'IS NOT NULL',
+      isnull: 'IS NULL'
+    }.freeze
 
-    EXAMPLE = {"0"=>{"column"=>"source_port", "operator"=>"is", "value"=>"80"}, "1"=>{"column"=>"destination_ip", "operator"=>"is", "value"=>"10.0.1.1"}, "2"=>{"column"=>"signature", "operator"=>"is", "value"=>"1"}, "3"=>{"column"=>"classification", "operator"=>"is", "value"=>"1"}, "4"=>{"column"=>"sensor", "operator"=>"is", "value"=>"1"}, "5"=>{"column"=>"start_time", "operator"=>"gte", "value"=>"2012/02/21 12:05:17"}}
+    EXAMPLE = {
+      '0' => { 'column' => 'source_port', 'operator' => 'is', 'value' => '80' },
+      '1' => { 'column' => 'destination_ip', 'operator' => 'is', 'value' => '10.0.1.1' },
+      '2' => { 'column' => 'signature', 'operator' => 'is', 'value' => '1' },
+      '3' => { 'column' => 'classification', 'operator' => 'is', 'value' => '1' },
+      '4' => { 'column' => 'sensor', 'operator' => 'is', 'value' => '1' },
+      '5' => { 'column' => 'start_time', 'operator' => 'gte', 'value' => '2012/02/21 12:05:17' }
+    }.freeze
 
     OR = lambda do |data|
       "select a.* from (#{data}) a"
@@ -58,145 +65,145 @@ module Snorby
 
     DO_OR = lambda do |data|
       return "select event.* from events_with_join as event #{data} where 1 = 0 or " if data
-      "select event.* from events_with_join as event where 1 = 0 or "
+      'select event.* from events_with_join as event where 1 = 0 or '
     end
 
-    TCP = "inner join tcphdr on event.sid = tcphdr.sid and event.cid = tcphdr.cid "
+    TCP = 'inner join tcphdr on event.sid = tcphdr.sid and event.cid = tcphdr.cid '.freeze
 
-    UDP = "inner join udphdr on event.sid = udphdr.sid and event.cid = udphdr.cid "
+    UDP = 'inner join udphdr on event.sid = udphdr.sid and event.cid = udphdr.cid '.freeze
 
-    SIGNATURE = "inner join signature on event.signature = signature.sig_id "
+    SIGNATURE = 'inner join signature on event.signature = signature.sig_id '.freeze
 
-    SENSOR = "inner join sensor on event.sid = sensor.sid "
+    SENSOR = 'inner join sensor on event.sid = sensor.sid '.freeze
 
-    IP = "inner join iphdr on event.sid = iphdr.sid and event.cid = iphdr.cid "
+    IP = 'inner join iphdr on event.sid = iphdr.sid and event.cid = iphdr.cid '.freeze
 
-    PAYLOAD = "inner join data on event.sid = data.sid and event.cid = data.cid "
+    PAYLOAD = 'inner join data on event.sid = data.sid and event.cid = data.cid '.freeze
 
     DEFAULT_PROCESS = lambda do |data|
       data
     end
 
     BUILD = {
-      :or => {
-        :event => {
-          :sql => DO_OR.call(false),
-          :process => DEFAULT_PROCESS
+      or: {
+        event: {
+          sql: DO_OR.call(false),
+          process: DEFAULT_PROCESS
         },
-        :tcp => {
-          :sql => DO_OR.call(TCP),
-          :process => DEFAULT_PROCESS,
+        tcp: {
+          sql: DO_OR.call(TCP),
+          process: DEFAULT_PROCESS
         },
-        :udp => {
-          :sql => DO_OR.call(UDP),
-          :process => DEFAULT_PROCESS
+        udp: {
+          sql: DO_OR.call(UDP),
+          process: DEFAULT_PROCESS
         },
-        :signature => {
-          :sql => DO_OR.call(SIGNATURE),
-          :process => DEFAULT_PROCESS
+        signature: {
+          sql: DO_OR.call(SIGNATURE),
+          process: DEFAULT_PROCESS
         },
-        :sensor => {
-          :sql => DO_OR.call(SENSOR),
-          :process => DEFAULT_PROCESS
+        sensor: {
+          sql: DO_OR.call(SENSOR),
+          process: DEFAULT_PROCESS
         },
-        :payload => {
-          :sql => DO_OR.call(PAYLOAD),
-          :process => lambda do |data|
+        payload: {
+          sql: DO_OR.call(PAYLOAD),
+          process: lambda do |data|
             convert_values = []
             data.each do |x|
-              hex = ""
-              x.to_s.each_char { |x| hex += x.unpack('H*')[0] }
+              hex = ''
+              x.to_s.each_char { |y| hex += y.unpack('H*')[0] }
               convert_values.push("%#{hex}%")
             end
             convert_values
           end
         },
-        :ip => {
-          :sql => DO_OR.call(IP),
-          :process => lambda do |data|
+        ip: {
+          sql: DO_OR.call(IP),
+          process: lambda do |data|
             tmp = []
             data.each do |ip|
               if ip.to_s.length >= 1
                 tmp.push(IPAddr.new(ip.to_s).to_i)
               else
-                tmp.push("");
+                tmp.push('')
               end
             end
             tmp
           end
         }
       },
-      :and => {
-        :event => {
-          :sql => "",
-          :process => DEFAULT_PROCESS
+      and: {
+        event: {
+          sql: '',
+          process: DEFAULT_PROCESS
         },
-        :tcp => {
-          :sql => TCP,
-          :process => DEFAULT_PROCESS
+        tcp: {
+          sql: TCP,
+          process: DEFAULT_PROCESS
         },
-        :udp => {
-          :sql => UDP,
-          :process => DEFAULT_PROCESS
+        udp: {
+          sql: UDP,
+          process: DEFAULT_PROCESS
         },
-        :signature => {
-          :sql => SIGNATURE,
-          :process => DEFAULT_PROCESS
+        signature: {
+          sql: SIGNATURE,
+          process: DEFAULT_PROCESS
         },
-        :sensor => {
-          :sql => SENSOR,
-          :process => DEFAULT_PROCESS
+        sensor: {
+          sql: SENSOR,
+          process: DEFAULT_PROCESS
         },
-        :payload => {
-          :sql => PAYLOAD,
-          :process => lambda do |data|
+        payload: {
+          sql: PAYLOAD,
+          process: lambda do |data|
             convert_values = []
             data.each do |x|
-              hex = ""
-              x.to_s.each_char { |x| hex += x.unpack('H*')[0] }
+              hex = ''
+              x.to_s.each_char { |y| hex += y.unpack('H*')[0] }
               convert_values.push("%#{hex}%")
             end
             convert_values
           end
         },
-        :ip => {
-          :sql => IP,
-          :process => lambda do |data|
+        ip: {
+          sql: IP,
+          process: lambda do |data|
             tmp = []
             data.each do |ip|
               if ip.to_s.length >= 1
                 tmp.push(IPAddr.new(ip.to_s).to_i)
               else
-                tmp.push("");
+                tmp.push('')
               end
             end
             tmp
           end
         }
       }
-    }
+    }.freeze
 
     MAP = {
-      :source_port => [:tcp, :udp],
-      :tcp_source_port => :tcp,
-      :udp_source_port => :udp,
-      :udp_destination_port => :udp,
-      :tcp_destination_port => :tcp,
-      :source_ip => :ip,
-      :destination_port => [:tcp, :udp],
-      :destination_ip => :ip,
-      :signature_name => :signature,
-      :severity => :signature,
-      :signature => :event,
-      :payload => :payload,
-      :start_time => :event,
-      :end_time => :event,
-      :classification => :event,
-      :user => :event,
-      :sensor => :event,
-      :sensor_name => :sensor,
-      :has_note => :event
-    }
+      source_port: [:tcp, :udp],
+      tcp_source_port: :tcp,
+      udp_source_port: :udp,
+      udp_destination_port: :udp,
+      tcp_destination_port: :tcp,
+      source_ip: :ip,
+      destination_port: [:tcp, :udp],
+      destination_ip: :ip,
+      signature_name: :signature,
+      severity: :signature,
+      signature: :event,
+      payload: :payload,
+      start_time: :event,
+      end_time: :event,
+      classification: :event,
+      user: :event,
+      sensor: :event,
+      sensor_name: :sensor,
+      has_note: :event
+    }.freeze
 
     def self.joins
       [
@@ -212,29 +219,29 @@ module Snorby
 
     def self.all(&block)
       all = []
-      self.joins.each do |x|
+      joins.each do |x|
         block.call(x) if block
-        all.push instance_variable_get("@" + x.to_s)
+        all.push instance_variable_get('@' + x.to_s)
       end
       all
     end
 
-    def self.build(matchall, page=true, params=EXAMPLE)
-      self.joins.each do |x|
-        instance_variable_set("@" + x.to_s, [])
-        instance_variable_set("@" + x.to_s + "_value", [])
+    def self.build(matchall, page = true, params = EXAMPLE)
+      joins.each do |x|
+        instance_variable_set('@' + x.to_s, [])
+        instance_variable_set('@' + x.to_s + '_value', [])
       end
 
-      @type = if matchall === "true"
-        :and
-      else
-        :or
-      end
+      @type = if matchall == 'true'
+                :and
+              else
+                :or
+              end
 
       @params = params
 
-      self.build_logic
-      self.perform(page)
+      build_logic
+      perform(page)
     end
 
     def self.perform(page)
@@ -242,29 +249,29 @@ module Snorby
       values = []
 
       if @type.to_sym == :or
-        join_string = " OR "
-        sql_join_string = " UNION "
+        join_string = ' OR '
+        sql_join_string = ' UNION '
         pack = OR
       else
-        join_string = " AND "
-        sql_join_string = " "
+        join_string = ' AND '
+        sql_join_string = ' '
         pack = AND
         and_values = []
       end
 
-      self.all do |x|
-        k = instance_variable_get("@" + x.to_s)
-        v = instance_variable_get("@" + x.to_s + "_value")
+      all do |x|
+        k = instance_variable_get('@' + x.to_s)
+        v = instance_variable_get('@' + x.to_s + '_value')
 
         unless k.empty?
           if @type == :or
             sql.push(BUILD[@type][x.to_sym][:sql] + "(#{k.join(join_string)})")
-            values.push(BUILD[@type][x.to_sym][:process].call(v)).flatten!
           else
             sql.push(BUILD[@type][x.to_sym][:sql])
             and_values.push("(#{k.join(join_string)})")
-            values.push(BUILD[@type][x.to_sym][:process].call(v)).flatten!
           end
+
+          values.push(BUILD[@type][x.to_sym][:process].call(v)).flatten!
         end
       end
 
@@ -280,7 +287,7 @@ module Snorby
         # end
 
         # p hack
-        # hacked_values = "(#{hack.join(" OR ")})"
+        # hacked_values = "(#{hack.join(' OR ')})"
         # p hacked_values
         # and_values.push(hacked_values)
 
@@ -292,7 +299,7 @@ module Snorby
       count = ["select count(*) from (#{pack.call(sql.join(sql_join_string))}) a"]
 
       dd = if page
-             pack.call(sql.join(sql_join_string)) + " LIMIT ? OFFSET ?"
+             pack.call(sql.join(sql_join_string)) + ' LIMIT ? OFFSET ?'
            else
              pack.call(sql.join(sql_join_string))
            end
@@ -306,28 +313,28 @@ module Snorby
 
     def self.build_logic
       @params.each do |k,v|
-        column = (v['column'] or v[:column]).to_sym
-        operator = (v['operator'] or v[:operator]).to_sym
-        value = (v['value'] or v[:value])
+        column = (v['column'] || v[:column]).to_sym
+        operator = (v['operator'] || v[:operator]).to_sym
+        value = (v['value'] || v[:value])
 
-        enabled = if (v.has_key?('enabled') or v.has_key?(:enabled))
-          case (v['enabled'] or v[:enabled]).class.to_s
-          when "TrueClass"
-            true
-          when "FalseClass"
-            false
-          when "String"
-            (v['enabled'] or v[:enabled]) === "false" ? false : true
-          else
-            false
-          end
-        else
-          (column && operator && value) ? true : false
-        end
+        enabled = if v.key?('enabled') || v.key?(:enabled)
+                    case (v['enabled'] || v[:enabled]).class.to_s
+                    when 'TrueClass'
+                      true
+                    when 'FalseClass'
+                      false
+                    when 'String'
+                      (v['enabled'] || v[:enabled]) == 'false' ? false : true
+                    else
+                      false
+                    end
+                  else
+                    (column && operator && value) ? true : false
+                  end
 
         next unless enabled
 
-        if MAP.has_key?(column.to_sym)
+        if MAP.key?(column.to_sym)
           map_value = MAP[column.to_sym]
 
           if map_value.is_a?(Array)
@@ -340,7 +347,7 @@ module Snorby
                 else
                   operator = :notnull
                 end
-                value = "NULL"
+                value = 'NULL'
               end
 
               if column == :has_note
@@ -369,22 +376,19 @@ module Snorby
 
               tmp_sql = "#{COLUMN[column][x]} #{OPERATOR[operator]}"
 
-              instance_variable_get("@" + x.to_s).push(tmp_sql)
-              unless [:isnull, :notnull].include?(operator)
+              instance_variable_get('@' + x.to_s).push(tmp_sql)
+              next if [:isnull, :notnull].include?(operator)
 
-                if [:start_time, :end_time].include?(column)
-                  # If timezone_search exists ands is set to true
-                  # in snorby_config.yml set the search with the local time.
-                  # Otherwise (default) search with UTC
-		  value = APP_CONFIG['timezone_search'] ?  Time.zone.parse(value).strftime('%Y-%m-%d %H:%M:%S') : Time.zone.parse(value).utc.strftime('%Y-%m-%d %H:%M:%S')
-                end
-
-                if column == :signature_name
-                  value = "%#{value}%"
-                end
-
-                instance_variable_get("@" + x.to_s + "_value").push(value)
+              if [:start_time, :end_time].include?(column)
+                # If timezone_search exists ands is set to true
+                # in snorby_config.yml set the search with the local time.
+                # Otherwise (default) search with UTC
+                value = APP_CONFIG['timezone_search'] ? Time.zone.parse(value).strftime('%Y-%m-%d %H:%M:%S') : Time.zone.parse(value).utc.strftime('%Y-%m-%d %H:%M:%S')
               end
+
+              value = "%#{value}%" if column == :signature_name
+
+              instance_variable_get('@' + x.to_s + '_value').push(value)
             end
 
           else
@@ -395,7 +399,7 @@ module Snorby
               else
                 operator = :notnull
               end
-              value = "NULL"
+              value = 'NULL'
             end
 
             if column == :has_note
@@ -428,18 +432,15 @@ module Snorby
             unless [:isnull, :notnull].include?(operator)
 
               if [:start_time, :end_time].include?(column)
-	  	# If timezone_search exists ands is set to true
+                # If timezone_search exists ands is set to true
                 # in snorby_config.yml set the search with the local time.
                 # Otherwise (default) search with UTC
-                value = APP_CONFIG['timezone_search'] ?  Time.zone.parse(value).strftime('%Y-%m-%d %H:%M:%S') : Time.zone.parse(value).utc.strftime('%Y-%m-%d %H:%M:%S')
+                value = APP_CONFIG['timezone_search'] ? Time.zone.parse(value).strftime('%Y-%m-%d %H:%M:%S') : Time.zone.parse(value).utc.strftime('%Y-%m-%d %H:%M:%S')
               end
 
-              if column == :signature_name
-                value = "%#{value}%"
-              end
+              value = "%#{value}%"if column == :signature_name
 
-
-              instance_variable_get("@" + map_value.to_s + "_value").push(value)
+              instance_variable_get('@' + map_value.to_s + '_value').push(value)
             end
           end
 
@@ -451,241 +452,241 @@ module Snorby
       @signatures ||= Signature.select(:sig_name, :sig_id)
       @classifications ||= Classification.select(:name, :id)
       @users ||= User.select(:name, :id)
-      @sensors ||= Sensor.select(:name, :sid)
+      @sensors ||= Sensor.select(:name, :sid, :hostname)
       @severities ||= Severity.select(:name, :sig_id)
 
       @json ||= {
-        :operators => {
-          :contains => [
+        operators: {
+          contains: [
             {
-              :id => :contains,
-              :value => "contains"
+              id: :contains,
+              value: 'contains'
             },
             {
-              :id => :contains_not,
-              :value => "does not contain"
+              id: :contains_not,
+              value: 'does not contain'
             }
           ],
-          :more_text_input => [
+          more_text_input: [
             {
-              :id => :is,
-              :value => "is"
+              id: :is,
+              value: 'is'
             },
             {
-              :id => :is_not,
-              :value => "is not"
+              id: :is_not,
+              value: 'is not'
             },
             {
-              :id => :contains,
-              :value => "contains"
+              id: :contains,
+              value: 'contains'
             },
             {
-              :id => :contains_not,
-              :value => "does not contain"
+              id: :contains_not,
+              value: 'does not contain'
             }
           ],
-          :text_input => [
+          text_input: [
             {
-              :id => :is,
-              :value => "is"
+              id: :is,
+              value: 'is'
             },
             {
-              :id => :is_not,
-              :value => "is not"
+              id: :is_not,
+              value: 'is not'
             }
           ],
-          :datetime => [
+          datetime: [
             {
-              :id => :is,
-              :value => "is"
+              id: :is,
+              value: 'is'
             },
             {
-              :id => :is_not,
-              :value => "is not"
+              id: :is_not,
+              value: 'is not'
             },
             {
-              :id => :contains,
-              :value => "contains"
+              id: :contains,
+              value: 'contains'
             },
             {
-              :id => :contains_not,
-              :value => "does not contain"
+              id: :contains_not,
+              value: 'does not contain'
             },
             {
-              :id => :gt,
-              :value => "greater than"
+              id: :gt,
+              value: 'greater than'
             },
             {
-              :id => :gte,
-              :value => "greater than or equal to"
+              id: :gte,
+              value: 'greater than or equal to'
             },
             {
-              :id => :lt,
-              :value => "less than"
+              id: :lt,
+              value: 'less than'
             },
             {
-              :id => :lte,
-              :value => "less than or equal to"
+              id: :lte,
+              value: 'less than or equal to'
             }
           ]
         },
-        :columns => [
+        columns: [
           {
-            :value => "Source Address",
-            :id => :source_ip,
-            :type => :text_input
+            value: 'Source Address',
+            id: :source_ip,
+            type: :text_input
           },
           {
-            :value => "TCP Source Port",
-            :id => :tcp_source_port,
-            :type => :text_input
+            value: 'TCP Source Port',
+            id: :tcp_source_port,
+            type: :text_input
           },
           {
-            :value => "UDP Source Port",
-            :id => :udp_source_port,
-            :type => :text_input
+            value: 'UDP Source Port',
+            id: :udp_source_port,
+            type: :text_input
           },
           {
-            :value => "Destination Address",
-            :id => :destination_ip,
-            :type => :text_input
+            value: 'Destination Address',
+            id: :destination_ip,
+            type: :text_input
           },
           {
-            :value => "TCP Destination Port",
-            :id => :tcp_destination_port,
-            :type => :text_input
+            value: 'TCP Destination Port',
+            id: :tcp_destination_port,
+            type: :text_input
           },
           {
-            :value => "UDP Destination Port",
-            :id => :udp_destination_port,
-            :type => :text_input
+            value: 'UDP Destination Port',
+            id: :udp_destination_port,
+            type: :text_input
           },
           {
-            :value => "Classification",
-            :id => :classification,
-            :type => :select
+            value: 'Classification',
+            id: :classification,
+            type: :select
           },
           {
-            :value => "Signature",
-            :id => :signature,
-            :type => :select
+            value: 'Signature',
+            id: :signature,
+            type: :select
           },
           {
-            :value => "Signature Name",
-            :id => :signature_name,
-            :type => :contains
+            value: 'Signature Name',
+            id: :signature_name,
+            type: :contains
           },
           {
-            :value => "Classified By",
-            :id => :user,
-            :type => :select
+            value: 'Classified By',
+            id: :user,
+            type: :select
           },
           {
-            :value => "Agent",
-            :id => :sensor,
-            :type => :select
+            value: 'Agent',
+            id: :sensor,
+            type: :select
           },
           {
-            :value => "Start Time",
-            :id => :start_time,
-            :type => :text_input
+            value: 'Start Time',
+            id: :start_time,
+            type: :text_input
           },
           {
-            :value => "End Time",
-            :id => :end_time,
-            :type => :text_input
+            value: 'End Time',
+            id: :end_time,
+            type: :text_input
           },
           {
-            :value => "Payload",
-            :id => :payload,
-            :type => :text_input
+            value: 'Payload',
+            id: :payload,
+            type: :text_input
           },
           {
-            :value => "Severity",
-            :id => :severity,
-            :type => :select
+            value: 'Severity',
+            id: :severity,
+            type: :select
           },
           {
-            :value => "Has Note",
-            :id => :has_note,
-            :type => :select
+            value: 'Has Note',
+            id: :has_note,
+            type: :select
           }
           # {
-            # :value => "Protocol",
-            # :id => :protocol,
-            # :type => :select
+            # value: 'Protocol',
+            # id: :protocol,
+            # type: :select
           # }
         ],
-        :protocol => {
-          :value => [
+        protocol: {
+          value: [
             {
-              :id => :tcp,
-              :value => "TCP"
+              id: :tcp,
+              value: 'TCP'
             },
             {
-              :id => :udp,
-              :value => "UDP"
+              id: :udp,
+              value: 'UDP'
             },
             {
-              :id => :icmp,
-              :value => "ICMP"
+              id: :icmp,
+              value: 'ICMP'
             }
           ]
         },
-        :has_note => {
-          :value => [
+        has_note: {
+          value: [
             {
-              :id => 1,
-              :value => "Yes"
+              id: 1,
+              value: 'Yes'
             },
             {
-              :id => 0,
-              :value => "No"
+              id: 0,
+              value: 'No'
             }
           ]
         },
-        :classifications => {
-          :type => :dropdown,
-          :value => @classifications.collect do |x|
+        classifications: {
+          type: :dropdown,
+          value: @classifications.collect do |x|
             {
-              :id => x.id,
-              :value => x.name
+              id: x.id,
+              value: x.name
             }
-          end.push({ :id => 0, :value => "Unclassified" })
+          end.push(id: 0, value: 'Unclassified')
         },
-        :severities => {
-          :type => :dropdown,
-          :value => @severities.collect do |x|
+        severities: {
+          type: :dropdown,
+          value: @severities.collect do |x|
             {
-              :id => x.sig_id,
-              :value => x.name
-            }
-          end
-        },
-        :signatures => {
-          :type => :dropdown,
-          :value => @signatures.collect do |x|
-            {
-              :id => x.sig_id,
-              :value => x.sig_name
+              id: x.sig_id,
+              value: x.name
             }
           end
         },
-        :users => {
-          :type => :dropdown,
-          :value => @users.collect do |x|
+        signatures: {
+          type: :dropdown,
+          value: @signatures.collect do |x|
             {
-              :id => x.id,
-              :value => x.name
+              id: x.sig_id,
+              value: x.sig_name
             }
           end
         },
-        :sensors => {
-          :type => :dropdown,
-          :value => @sensors.collect do |x|
+        users: {
+          type: :dropdown,
+          value: @users.collect do |x|
             {
-              :id => x.sid,
-              :value => x.sensor_name
+              id: x.id,
+              value: x.name
+            }
+          end
+        },
+        sensors: {
+          type: :dropdown,
+          value: @sensors.collect do |x|
+            {
+              id: x.sid,
+              value: x.sensor_name
             }
           end
         }
@@ -693,6 +694,5 @@ module Snorby
 
       @json.to_json
     end
-
   end # Search
 end # Snorby
