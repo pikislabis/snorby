@@ -27,18 +27,18 @@ class Sensor < ActiveRecord::Base
 
   has_many :asset_names, through: :agent_asset_names
 
-  has_many :metrics, class_name: 'Cache', :foreign_key => :sid, :dependent => :destroy
+  has_many :metrics, class_name: 'Cache', foreign_key: :sid, dependent: :destroy
 
-  has_many :daily_metrics, class_name: 'DailyCache', :foreign_key => :sid, :dependent => :destroy
+  has_many :daily_metrics, class_name: 'DailyCache', foreign_key: :sid, dependent: :destroy
 
-  has_many :events, :foreign_key => :sid, :dependent => :destroy
+  has_many :events, foreign_key: :sid, dependent: :destroy
 
-  has_many :ips, :foreign_key => :sid, :dependent => :destroy
+  has_many :ips, foreign_key: :sid, dependent: :destroy
 
-  has_many :notes, :foreign_key => :sid, :dependent => :destroy
+  has_many :notes, foreign_key: :sid, dependent: :destroy
 
   def cache
-    Cache.all(:sid => sid)
+    Cache.where(sid: sid)
   end
 
   def sensor_name
@@ -47,7 +47,7 @@ class Sensor < ActiveRecord::Base
   end
 
   def daily_cache
-    DailyCache.all(:sid => sid)
+    DailyCache.where(sid: sid)
   end
 
   def last
@@ -59,14 +59,10 @@ class Sensor < ActiveRecord::Base
   #
   #
   def event_percentage
-    begin
-      total_event_count = Sensor.all.map(&:events_count).sum
-      return 0 if total_event_count.zero?
-      "%.2f" % ((self.events_count.to_f / total_event_count.to_f) * 100).round(1)
-    rescue FloatDomainError
-      0
-    end
+    total_event_count = Sensor.all.map(&:events_count).sum
+    return 0 if total_event_count.zero?
+    format('%.2f', ((events_count.to_f / total_event_count) * 100).round(1))
+  rescue FloatDomainError
+    0
   end
-
-
 end
