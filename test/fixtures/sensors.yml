@@ -10,3 +10,9 @@ one:
   hostname: 'sensorIPS:eth0'
   interface: 'eth0'
   last_cid: 2
+
+two:
+  sid: 2
+  name: 'Click To Change Me'
+  hostname: 'sensorIPS2:eth0'
+  interface: 'eth0'
