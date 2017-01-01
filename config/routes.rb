@@ -79,9 +79,8 @@ Snorby::Application.routes.draw do
 
     collection do
       post :add
-      get :lookup
       post :bulk_upload
-      get 'get_bulk_upload', action: :get_bulk_upload, as: 'get_bulk_upload'
+      get 'new_bulk_upload', action: :new_bulk_upload, as: 'new_bulk_upload'
     end
   end
 

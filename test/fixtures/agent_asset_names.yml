@@ -1,0 +1,7 @@
+one:
+  sensor: one
+  asset_name: one
+
+two:
+  sensor: three
+  asset_name: one

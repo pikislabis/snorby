@@ -10,7 +10,7 @@ class AssetName < ActiveRecord::Base
   #
   # property :global, Boolean, :default => true
 
-  has_many :agent_asset_names
+  has_many :agent_asset_names, foreign_key: :asset_name_id, dependent: :destroy
   has_many :sensors, through: :agent_asset_names
 
   def ip_address
@@ -20,11 +20,11 @@ class AssetName < ActiveRecord::Base
   def save_with_sensors(updated_sensors)
     return false unless save!
 
-    agent_asset_names.destroy_all
+    agent_asset_names.delete_all
 
     if updated_sensors && !updated_sensors.empty?
       updated_sensors.each do |sensor|
-        AgentAssetName.create(sensor_sid: sensor.sid, asset_name_id: id).save!
+        AgentAssetName.create(sensor_sid: sensor.sid, asset_name_id: id)
       end
     end
 
@@ -40,25 +40,22 @@ class AssetName < ActiveRecord::Base
   end
 
   def agent_ids_string
-    sensors.map(&:sid).join(",")
+    sensors.map(&:sid).join(',')
   end
 
   def applies_to
-    if self.global
-      return 'All Agents'
-    end
+    return 'All Agents' if global
 
-    return "#{sensors.count} Agents"
+    "#{sensors.count} Agents"
   end
 
   def detailed_json
-
-    return {
-      :id => self.id,
-      :name => self.name,
-      :global => self.global,
-      :ip_address => self.ip_address.to_s,
-      :sensors => self.sensors.map{|sensor| sensor.sid}
+    {
+      id: id,
+      name: name,
+      global: global,
+      ip_address: ip_address.to_s,
+      sensors: sensors.map(&:id)
     }
   end
 

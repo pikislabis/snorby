@@ -22,17 +22,17 @@ ActiveRecord::Schema.define(version: 20160527182126) do
   add_index "agent_asset_names", ["sensor_sid"], name: "index_agent_asset_names_sensor", using: :btree
 
   create_table "aggregated_events", id: false, force: :cascade do |t|
-    t.integer "ip_src",           limit: 4, default: 0, null: false
-    t.integer "ip_dst",           limit: 4, default: 0, null: false
+    t.integer "ip_src",           limit: 8, default: 0, null: false
+    t.integer "ip_dst",           limit: 8, default: 0, null: false
     t.integer "signature",        limit: 4
     t.integer "event_id",         limit: 4
     t.integer "number_of_events", limit: 8, default: 0, null: false
   end
 
   create_table "asset_names", force: :cascade do |t|
-    t.integer "ip_address", limit: 4,    default: 0,    null: false
+    t.integer "ip_address", limit: 8,    default: 0,    null: false
     t.string  "name",       limit: 1024,                null: false
-    t.boolean "global",                  default: true
+    t.boolean "global",     default: true
   end
 
   add_index "asset_names", ["ip_address"], name: "index_asset_names_ip_address", using: :btree

@@ -6,19 +6,8 @@
 #
 one:
   sid: 1
-  name: 'sensorOne'
-  hostname: 'sensorIPS:eth0'
-  interface: 'eth0'
-  last_cid: 2
+  cid: 5754
 
 two:
-  sid: 2
-  name: 'Click To Change Me'
-  hostname: 'sensorIPS2:eth0'
-  interface: 'eth0'
-
-three:
-  sid: 3
-  name: 'sensorThree'
-  hostname: 'sensorIPS3:eth0'
-  interface: 'eth0'
+  sid: 1
+  cid: 5960

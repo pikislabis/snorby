@@ -1,17 +1,14 @@
 class AgentAssetName < ActiveRecord::Base
-  belongs_to :sensor, foreign_key: [:sensor_sid]
-  belongs_to :asset_name
+  self.primary_keys = [:sensor_sid, :asset_name_id]
+
+  belongs_to :sensor, foreign_key: :sensor_sid
+  belongs_to :asset_name, foreign_key: :asset_name_id
 
   def self.delete_agent_references(ip_address, sensor_sid)
-
-    sql = %{
-     delete a
-     from agent_asset_names a
-     inner join asset_names b on a.asset_name_id = b.id
-     and b.global = 0 and b.ip_address = ? and a.sensor_sid = ?;
-    }
-
-    ActiveRecord::Base.connection.execute(sql, ip_address.to_i, sensor_sid)
+    AgentAssetName.joins(:asset_name)
+                  .where(asset_names: { global: false, ip_address: ip_address },
+                         sensor_sid: sensor_sid)
+                  .delete_all
 
     # delete any empty references (global = 0 and no agents assigned)
     sql = %{
