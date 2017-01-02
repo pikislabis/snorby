@@ -4,12 +4,12 @@ RAILS_VERSION = '4.2.7.1'.freeze
 
 gem 'rails', RAILS_VERSION
 
-gem 'rake',          '~> 11.2'
+gem 'rake',          '~> 12.0'
 gem 'bundler',       '~> 1.12'
 
 gem 'request_store', '~> 1.3.1'
 
-gem 'jquery-rails',  '~> 4.1'
+gem 'jquery-rails',  '~> 4.2.2'
 gem 'json',          '~> 1.8'
 gem 'env'
 
@@ -22,10 +22,10 @@ gem 'jruby-rack-worker',           platforms: :jruby
 # DateTime Patches
 gem 'home_run',                    require: 'date', platforms: :mri
 
-gem 'mysql2',                      '0.4.4'
+gem 'mysql2',                      '0.4.5'
 
 # Deploy with Capistrano
-gem 'capistrano',                  '3.6.1'
+gem 'capistrano',                  '3.7.1'
 
 # Rails Plugins
 gem 'jammit',                      '~> 0.7.0'
@@ -39,7 +39,7 @@ gem 'chronic',                     '~> 0.10.2'
 gem 'pdfkit',                      '~> 0.5.0'
 gem 'ezprint',                     '~> 1.0.0'
 gem 'daemons',                     '~> 1.2.3'
-gem 'will_paginate',               '~> 3.1.0'
+gem 'will_paginate',               '~> 3.1.5'
 
 gem 'delayed_job_active_record',   '~> 4.1.1'
 gem 'composite_primary_keys',      '~> 8.1'
@@ -53,7 +53,7 @@ gem 'composite_primary_keys',      '~> 8.1'
 # gem 'dm-paperclip',                '~> 2.4.1', :git => 'https://github.com/Snorby/dm-paperclip.git'
 
 gem 'net-dns',                     '~> 0.8.0'
-gem 'whois',                       '~> 3.6.5'
+gem 'whois',                       '~> 4.0.1'
 gem 'simple_form',                 '~> 3.3'
 gem 'geoip',                       '~> 1.6.1'
 gem 'netaddr',                     '~> 1.5.1'
