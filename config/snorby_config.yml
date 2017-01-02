@@ -58,4 +58,3 @@ test:
     - "test/fixtures"
   geoip_uri: "http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz"
   authentication_mode: database
-  time_zone: 'UTC'
