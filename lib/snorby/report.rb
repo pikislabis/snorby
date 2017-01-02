@@ -1,93 +1,69 @@
 module Snorby
-  
   module Report
-    
     include Rails.application.routes.url_helpers # brings ActionDispatch::Routing::UrlFor
     include ActionView::Helpers::TagHelper
-    
-    def self.build_report(range='yesterday', timezone="UTC")
 
-      begin
-        Time.zone = timezone 
+    def self.build_report(range = 'yesterday', timezone = 'UTC')
+      Time.zone = timezone
 
-        @range = range
-        set_defaults
+      @range = range
+      set_defaults
 
-        @src_metrics = @cache.src_metrics
-        @dst_metrics = @cache.dst_metrics
+      @src_metrics = @cache.src_metrics
+      @dst_metrics = @cache.dst_metrics
 
-        @tcp = @cache.protocol_count(:tcp, @range.to_sym)
-        @udp = @cache.protocol_count(:udp, @range.to_sym)
-        @icmp = @cache.protocol_count(:icmp, @range.to_sym)
-        @high = @cache.severity_count(:high, @range.to_sym)
-        @medium = @cache.severity_count(:medium, @range.to_sym)
-        @low = @cache.severity_count(:low, @range.to_sym)
-        @sensor_metrics = @cache.sensor_metrics(@range.to_sym)
+      @tcp = @cache.protocol_count(:tcp, @range.to_sym)
+      @udp = @cache.protocol_count(:udp, @range.to_sym)
+      @icmp = @cache.protocol_count(:icmp, @range.to_sym)
+      @high = @cache.severity_count(:high, @range.to_sym)
+      @medium = @cache.severity_count(:medium, @range.to_sym)
+      @low = @cache.severity_count(:low, @range.to_sym)
+      @sensor_metrics = @cache.sensor_metrics(@range.to_sym)
 
-        @signature_metrics = @cache.signature_metrics
+      @signature_metrics = @cache.signature_metrics
 
-        @event_count = @cache.all.map(&:event_count).sum
+      @event_count = @cache.all.map(&:event_count).sum
 
-        @axis = @sensor_metrics.last[:range].join(',') if @sensor_metrics.last
+      @axis = @sensor_metrics.last[:range].join(',') if @sensor_metrics.last
 
-        @classifications = Classification.all(:order => [:events_count.desc])
-        @sensors = Sensor.all(:limit => 5, :order => [:events_count.desc])
-        @favers = User.all(:limit => 5, :order => [:favorites_count.desc])
+      @classifications = Classification.all.order(events_count: :desc)
+      @sensors = Sensor.all.limit(5).order(events_count: :desc)
+      @favers = User.all.limit(5).order(favorites_count: :desc)
 
-        @last_cache = @cache.get_last ? @cache.get_last.ran_at : Time.now
+      @last_cache = @cache.get_last ? @cache.get_last.ran_at : Time.now
 
-        sigs = Event.all(:limit => 5, :order => [:timestamp.desc], 
-                         :fields => [:sig_id], 
-                         :unique => true).map(&:signature).map(&:sig_id)
-        
+      av = ActionView::Base.new(Rails.root.join('app', 'views'))
+      av.assign(range: @range, start_time: @start_time, end_time: @end_time,
+                cache: @cache, src_metrics: @src_metrics,
+                dst_metrics: @dst_metrics, tcp: @tcp, udp: @udp, icmp: @icmp,
+                high: @high, medium: @medium, low: @low, last_cache: @last_cache,
+                sensor_metrics: @sensor_metrics, event_count: @event_count,
+                signature_metrics: @signature_metrics, axis: @axis)
 
-        av = ActionView::Base.new(Rails.root.join('app', 'views'))
-        av.assign({
-          :range => @range,
-          :start_time => @start_time,
-          :end_time => @end_time,
-          :cache => @cache,
-          :src_metrics => @src_metrics,
-          :dst_metrics => @dst_metrics,
-          :tcp => @tcp,
-          :udp => @udp,
-          :icmp => @icmp,
-          :high => @high,
-          :medium => @medium,
-          :low => @low,
-          :sensor_metrics => @sensor_metrics,
-          :signature_metrics => @signature_metrics,
-          :event_count => @event_count,
-          :axis => @axis,
-          :last_cache => @last_cache
-        })
+      pdf = PDFKit.new(av.render(template: 'page/dashboard.pdf.erb',
+                                 layout: 'layouts/pdf.html.erb'))
 
-        pdf = PDFKit.new(av.render(:template => "page/dashboard.pdf.erb", 
-                                   :layout => 'layouts/pdf.html.erb'))
+      pdf.stylesheets << Rails.root.join('public/stylesheets/pdf.css')
 
-        pdf.stylesheets << Rails.root.join("public/stylesheets/pdf.css")
-        
-        data = {
-          :start_time => @start_time,
-          :end_time => @end_time,
-          :pdf => pdf.to_pdf
-        }
-        
-        return data
-      ensure
-        Time.zone = Snorby::CONFIG[:time_zone]
-      end
+      data = {
+        start_time: @start_time,
+        end_time: @end_time,
+        pdf: pdf.to_pdf
+      }
+
+      return data
+    ensure
+      Time.zone = Snorby::CONFIG[:time_zone]
     end
 
     def self.set_defaults
-
       case @range.to_sym
       when :last_24
         @cache = Cache.last_24
 
         @start_time = Time.zone.now.yesterday
         @end_time = Time.zone.now
-        
+
         # Fix This
         # @start_time = Time.zone.now.yesterday.beginning_of_day
         # @end_time = Time.zone.now.end_of_day
@@ -137,8 +113,6 @@ module Snorby
         @start_time = Time.zone.now.beginning_of_day
         @end_time = Time.zone.now.end_of_day
       end
-
     end
-    
   end
 end

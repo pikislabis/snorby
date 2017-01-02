@@ -8,12 +8,21 @@ admin:
   name: Administrator
   email: snorby@example.com
   admin: true
+  accept_notes: 1
 
 user:
   name: User
   email: user@example.com
   encrypted_password: <%= User.new.send(:password_digest, 'snorby') %>
   admin: false
+  accept_notes: 3
+
+user_2:
+  name: User 2
+  email: user_2@example.com
+  encrypted_password: <%= User.new.send(:password_digest, 'p@ssW0rd') %>
+  admin: false
+  accept_notes: 2
 
 disabled:
   name: Disabled

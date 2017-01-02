@@ -3,11 +3,12 @@ class User < ActiveRecord::Base
 
   # Include default devise modules. Others available are:
   # :token_authenticatable, :confirmable, :lockable and :timeoutable
-  if Snorby::CONFIG[:authentication_mode] == "cas"
+  if Snorby::CONFIG[:authentication_mode] == 'cas'
     devise :cas_authenticatable, :registerable, :trackable
-    property :email, String, :required => true, :unique => true
+    property :email, String, required: true, unique: true
   else
-    devise :database_authenticatable, :registerable, :recoverable, :rememberable, :trackable, :validatable
+    devise :database_authenticatable, :registerable, :recoverable,
+           :rememberable, :trackable, :validatable
   end
 
   attr_accessor :crop_x, :crop_y, :crop_w, :crop_h
@@ -87,14 +88,14 @@ class User < ActiveRecord::Base
   #   The name of the user.
   #
   def to_s
-    self.name.to_s
+    name.to_s
   end
 
   def avatar
     default_url = File.join(::User.snorby_url, "#{Snorby::CONFIG[:baseuri]}/images/default_avatar.png")
-    return default_url unless self.gravatar
+    return default_url unless gravatar
 
-    email_address = self.email.downcase
+    email_address = email.downcase
 
     # create the md5 hash
     hash = Digest::MD5.hexdigest(email_address)
@@ -103,9 +104,9 @@ class User < ActiveRecord::Base
 
   def in_json
     # create the md5 hash
-    hash = Digest::MD5.hexdigest(self.email)
-    #"https://gravatar.com/avatar/#{hash}.png?s=256&d=#{CGI.escape(default_url)}"
-    data = self.attributes
+    hash = Digest::MD5.hexdigest(email)
+    # "https://gravatar.com/avatar/#{hash}.png?s=256&d=#{CGI.escape(default_url)}"
+    data = attributes
     data[:gravatar_hash] = hash
     data[:classify_count] = classify_count
     data
@@ -115,37 +116,34 @@ class User < ActiveRecord::Base
     Event.where(user_id: id).count
   end
 
-  def send_daily_report(start_time, end_time)
-    ReportMailer.daily_report("#{name} <#{email}>", timezone).deliver
+  def send_daily_report
+    ReportMailer.daily_report("#{name} <#{email}>", timezone).deliver_now
   end
 
   def send_weekly_report
-    ReportMailer.weekly_report("#{name} <#{email}>", timezone).deliver
+    ReportMailer.weekly_report("#{name} <#{email}>", timezone).deliver_now
   end
 
   def send_monthly_report
-    ReportMailer.monthly_report("#{name} <#{email}>", timezone).deliver
+    ReportMailer.monthly_report("#{name} <#{email}>", timezone).deliver_now
   end
 
   def send_update_report(data)
-    ReportMailer.update_report("#{name} <#{email}>", data, timezone).deliver
+    ReportMailer.update_report("#{name} <#{email}>", data, timezone).deliver_now
   end
 
-  def accepts_note_notifications?(event=false)
-    if accept_notes == 1
-      return true
-    elsif accept_notes == 3
+  def accepts_note_notifications?(event = false)
+    return true if accept_notes == 1
+    if accept_notes == 3
       return false unless event
       return true if added_notes_for_event?(event)
-      return false
-    else
-      return false
     end
+
+    false
   end
 
   def added_notes_for_event?(event)
-    return true if event.notes.map(&:user_id).include?(id)
-    false
+    Note.where(sid: event.sid, cid: event.cid, user: self).any?
   end
 
   def cropping?
@@ -160,5 +158,4 @@ class User < ActiveRecord::Base
   def reprocess_avatar
     avatar.reprocess! if cropping?
   end
-
 end

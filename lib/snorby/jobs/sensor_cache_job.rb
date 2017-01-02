@@ -8,10 +8,10 @@ module Snorby
 
       def perform
 
-          Signal.trap("INT") do 
+          Signal.trap("INT") do
             if defined?(@cache)
               p @cache
-              @cache.destroy! 
+              @cache.destroy!
             end
             raise("SensorCacheJob Failed")
           end
@@ -19,7 +19,7 @@ module Snorby
           Signal.trap("TERM") do
             if defined?(@cache)
               p @cache
-              @cache.destroy! 
+              @cache.destroy!
             end
             raise("SensorCacheJob Failed")
           end
@@ -28,7 +28,7 @@ module Snorby
           half_past_time = current_hour + 30.minutes
 
           if half_past_time < DateTime.now
-            @stop_time = half_past_time 
+            @stop_time = half_past_time
           else
             @stop_time = current_hour
           end
@@ -74,8 +74,8 @@ module Snorby
 
             # Prevent Duplicate Cache Records
             if @sensor.cache.first.blank?
-              
-              start_time = @since_last_cache.first.timestamp.beginning_of_day + 
+
+              start_time = @since_last_cache.first.timestamp.beginning_of_day +
                 @since_last_cache.first.timestamp.hour.hours
 
               end_time = start_time + 30.minute
@@ -159,7 +159,7 @@ module Snorby
 
                     # send report
                     logit "Sending daily report for user #{user.name} #{start_time} #{start_time.strftime('%Z')} - #{end_time} #{now}, #{last_report_to_date}", false
-                    user.send_daily_report(start_time, end_time)
+                    user.send_daily_report
 
                     user.last_daily_report_at = end_time + 1.second
                     user.save!
@@ -172,9 +172,9 @@ module Snorby
                   current_week = current_time.strftime('%Y%W').to_i
 
                   last_weekly_to_date = if user.last_weekly_report_at.present?
-                                          user.last_weekly_report_at.to_i 
+                                          user.last_weekly_report_at.to_i
                                         else
-                                          0 
+                                          0
                                         end
 
                   logit "Weekly: #{now}, #{current_week}, #{last_weekly_to_date}", false
@@ -192,9 +192,9 @@ module Snorby
                   current_month = current_time.strftime('%Y%m').to_i
 
                   last_monthly_to_date = if user.last_monthly_report_at.present?
-                                           user.last_monthly_report_at.to_i 
+                                           user.last_monthly_report_at.to_i
                                          else
-                                           0 
+                                           0
                                          end
 
                   logit "monthly: #{now}, #{current_month}, #{last_monthly_to_date}", false
@@ -222,8 +222,8 @@ module Snorby
                                           (Time.now - 99.days).in_time_zone(user.timezone)
                                         end
 
-                  p "email report times: #{current_half_hour} #{last_report_half_hour}" 
-                  if current_half_hour > last_report_half_hour 
+                  p "email report times: #{current_half_hour} #{last_report_half_hour}"
+                  if current_half_hour > last_report_half_hour
 
                     report_cache = []
                     Sensor.each do |sensor|
@@ -263,7 +263,7 @@ module Snorby
 
           Snorby::Jobs.sensor_cache.destroy! if Snorby::Jobs.sensor_cache?
 
-          Delayed::Job.enqueue(Snorby::Jobs::SensorCacheJob.new(false), 
+          Delayed::Job.enqueue(Snorby::Jobs::SensorCacheJob.new(false),
           :priority => 1, :run_at => DateTime.now + 10.minutes)
 
       rescue => e
@@ -310,8 +310,8 @@ module Snorby
         def split_events_and_process(start_time, end_time)
 
           event = db_select(%{
-            select cid from event where timestamp >= '#{@stime.strftime("%Y-%m-%d %H:%M:%S")}' 
-            and timestamp < '#{@etime.strftime("%Y-%m-%d %H:%M:%S")}' and sid = #{@sensor.sid.to_i} 
+            select cid from event where timestamp >= '#{@stime.strftime("%Y-%m-%d %H:%M:%S")}'
+            and timestamp < '#{@etime.strftime("%Y-%m-%d %H:%M:%S")}' and sid = #{@sensor.sid.to_i}
             order by timestamp desc limit 1
           })
 
@@ -331,7 +331,7 @@ module Snorby
             else
               logit 'No cache records found - creating first cache record...'
               reset_counter_cache_columns
-              
+
               @last_cache = Cache.first_or_create(:sid => @sensor.sid, :ran_at => start_time)
               @cache = @last_cache
             end
@@ -360,4 +360,3 @@ module Snorby
 
   end
 end
-

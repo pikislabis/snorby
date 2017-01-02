@@ -3,3 +3,9 @@ one:
   sid: 1
   cid: 1
   body: Text for note one
+
+two:
+  user: user
+  sid: 1
+  cid: 2
+  body: Notify me when noted
