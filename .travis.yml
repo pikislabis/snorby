@@ -6,6 +6,7 @@ rvm:
 services:
   - mysql
 before_script:
+  - ln -sf /usr/bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
   - bundle exec rake snorby:start_worker RAILS_ENV=test
