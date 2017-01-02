@@ -85,7 +85,7 @@ Snorby is a Ruby on Rails web application for network security monitoring that i
 
 In the root Snorby directory type the following command:
 
-	`git pull origin master`
+	`git pull origin rails-4`
 
 Once the pull has competed successfully run the Snorby update rake task:
 
