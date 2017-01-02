@@ -36,11 +36,11 @@ class Cache < ActiveRecord::Base
 
   belongs_to :sensor, foreign_key: :sid, primary_key: :sid
 
-  has_one :event, foreign_key: [ :sid, :cid ], primary_key: [ :sid, :cid ]
+  has_one :event, foreign_key: [:sid, :cid], primary_key: [:sid, :cid]
 
   scope :last_month, -> { where('ran_at >= ? AND ran_at <= ?', (Time.zone.now - 2.months).beginning_of_month, (Time.zone.now - 2.months).end_of_month) }
 
-  scope :this_quarter, -> { where('ran_at >= ? AND ran_at <= ?',  Time.zone.now.beginning_of_quarter, Time.zone.now.end_of_quarter) }
+  scope :this_quarter, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_quarter, Time.zone.now.end_of_quarter) }
 
   scope :this_month, -> { where('ran_at >= ? AND ran_at <= ?', Time.zone.now.beginning_of_month, Time.zone.now.end_of_month) }
 
@@ -61,11 +61,7 @@ class Cache < ActiveRecord::Base
   end
 
   def self.cache_time
-    if (time = get_last)
-      return time.updated_at
-    else
-      Time.zone.now
-    end
+    get_last.try('updated_at') || Time.zone.now
   end
 
   def self.protocol_count(protocol, type = nil)
@@ -100,19 +96,19 @@ class Cache < ActiveRecord::Base
     when :high
       @cache.each do |hour, data|
         high_count = 0
-        data.map(&:severity_metrics).each { |x| high_count += (x.kind_of?(Hash) ? (x.has_key?(1) ? x[1] : 0) : 0) }
+        data.map(&:severity_metrics).each { |x| high_count += (x.is_a?(Hash) ? (x.key?(1) ? x[1] : 0) : 0) }
         count[hour] = high_count
       end
     when :medium
       @cache.each do |hour, data|
         medium_count = 0
-        data.map(&:severity_metrics).each { |x| medium_count += (x.kind_of?(Hash) ? (x.has_key?(2) ? x[2] : 0) : 0) }
+        data.map(&:severity_metrics).each { |x| medium_count += (x.is_a?(Hash) ? (x.key?(2) ? x[2] : 0) : 0) }
         count[hour] = medium_count
       end
     when :low
       @cache.each do |hour, data|
         low_count = 0
-        data.map(&:severity_metrics).each { |x| low_count += ( x.kind_of?(Hash) ? (x.has_key?(3) ? x[3] : 0) : 0) }
+        data.map(&:severity_metrics).each { |x| low_count += ( x.is_a?(Hash) ? (x.key?(3) ? x[3] : 0) : 0) }
         count[hour] = low_count
       end
     end
@@ -128,9 +124,8 @@ class Cache < ActiveRecord::Base
     @metrics = []
 
     Sensor.all.limit(5).order(events_count: :desc).each do |sensor|
-
       if type == :custom
-        count = {} #count_hash(type)
+        count = {} # count_hash(type)
 
         blah = all.where(sid: sensor.sid).group_by do |x|
           time = x.ran_at
@@ -142,9 +137,9 @@ class Cache < ActiveRecord::Base
         end
 
         @metrics << {
-          :name => sensor.sensor_name,
-          :data => count.values,
-          :range => count.keys.collect {|x| "'#{x.split('-')[2]}'" }
+          name: sensor.sensor_name,
+          data: count.values,
+          range: count.keys.collect { |x| "'#{x.split('-')[2]}'" }
         }
 
       else # if not custom
@@ -158,9 +153,9 @@ class Cache < ActiveRecord::Base
         end
 
         @metrics << {
-          :name => sensor.sensor_name,
-          :data => count.values,
-          :range => count.keys.collect {|x| "'#{x.split('-').last}'" }
+          name: sensor.sensor_name,
+          data: count.values,
+          range: count.keys.collect { |x| "'#{x.split('-').last}'" }
         }
 
       end # custom logic
@@ -172,20 +167,21 @@ class Cache < ActiveRecord::Base
   def self.src_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = all.map(&:src_ips).compact
-    count = 0
+    @cache = pluck(:src_ips).compact
 
     @cache.each do |ip_hash|
       ip_hash.each do |ip, count|
-        if @metrics.has_key?(ip)
+        if @metrics.key?(ip)
           @metrics[ip] += count
         else
-          @metrics.merge!({ip => count})
+          @metrics.merge!(ip => count)
         end
       end
     end
 
-    @metrics.sort{ |a,b| -1*(a[1]<=>b[1]) }.each do |data|
+    count = 0
+
+    @metrics.sort { |a, b| b[1] <=> a[1] }.each do |data|
       break if count >= limit
       @top << data
       count += 1
@@ -197,20 +193,21 @@ class Cache < ActiveRecord::Base
   def self.dst_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = all.map(&:dst_ips).compact
-    count = 0
+    @cache = pluck(:dst_ips).compact
 
     @cache.each do |ip_hash|
       ip_hash.each do |ip, count|
-        if @metrics.has_key?(ip)
+        if @metrics.key?(ip)
           @metrics[ip] += count
         else
-          @metrics.merge!({ip => count})
+          @metrics.merge!(ip => count)
         end
       end
     end
 
-    @metrics.sort{ |a,b| -1*(a[1]<=>b[1]) }.each do |data|
+    count = 0
+
+    @metrics.sort { |a, b| b[1] <=> a[1] }.each do |data|
       break if count >= limit
       @top << data
       count += 1
@@ -222,24 +219,22 @@ class Cache < ActiveRecord::Base
   def self.signature_metrics(limit = 20)
     @metrics = {}
     @top = []
-    @cache = all
-    count = 0
+    @cache = pluck(:signature_metrics).compact
 
-    @cache.map(&:signature_metrics).each do |data|
-      next unless data
-
+    @cache.each do |data|
       data.each do |id, value|
-        if @metrics.has_key?(id)
+        if @metrics.key?(id)
           temp_count = @metrics[id]
-          @metrics.merge!({id => temp_count + value})
+          @metrics.merge!(id => temp_count + value)
         else
-          @metrics.merge!({id => value})
+          @metrics.merge!(id => value)
         end
       end
-
     end
 
-    @metrics.sort{ |a,b| -1*(a[1]<=>b[1]) }.each do |data|
+    count = 0
+
+    @metrics.sort { |a, b| b[1] <=> a[1] }.each do |data|
       break if count >= limit
       @top << data
       count += 1
@@ -248,7 +243,7 @@ class Cache < ActiveRecord::Base
     @top
   end
 
-  def self.count_hash(type=nil)
+  def self.count_hash(type = nil)
     count = {}
 
     if type == :last_24
@@ -262,52 +257,38 @@ class Cache < ActiveRecord::Base
         count[key] = 0
       end
 
-    else
+    elsif type == :custom
+      time_start = Time.zone.now.yesterday.beginning_of_day.to_i
+      time_end = Time.zone.now.yesterday.end_of_day.to_i
 
-      if type == :custom
+      Range.new(time_start, time_end).step(1.day) do |seconds_since_epoch|
+        time = Time.zone.at(seconds_since_epoch)
+        key = "#{time.year}-#{time.month}-#{time.day}-#{time.hour}"
+        count[key] = 0
+      end
+    else # if not custom
+      if type == :today
+        time_start = Time.zone.now.beginning_of_day.to_i
+        time_end = Time.zone.now.end_of_day.to_i
+      else
         time_start = Time.zone.now.yesterday.beginning_of_day.to_i
-        time_end =  Time.zone.now.yesterday.end_of_day.to_i
+        time_end = Time.zone.now.yesterday.end_of_day.to_i
+      end
 
-        Range.new(time_start, time_end).step(1.day) do |seconds_since_epoch|
-          time = Time.zone.at(seconds_since_epoch)
-          key = "#{time.year}-#{time.month}-#{time.day}-#{time.hour}"
-          count[key] = 0
-        end
-      else # if not custom
-        if type == :today
-          time_start = Time.zone.now.beginning_of_day.to_i
-          time_end =  Time.zone.now.end_of_day.to_i
-        else
-          time_start = Time.zone.now.yesterday.beginning_of_day.to_i
-          time_end =  Time.zone.now.yesterday.end_of_day.to_i
-        end
-
-        Range.new(time_start, time_end).step(1.hour) do |seconds_since_epoch|
-          time = Time.zone.at(seconds_since_epoch)
-          key = "#{time.day}-#{time.hour}"
-          count[key] = 0
-        end
-      end # if custom
-
-
+      Range.new(time_start, time_end).step(1.hour) do |seconds_since_epoch|
+        time = Time.zone.at(seconds_since_epoch)
+        key = "#{time.day}-#{time.hour}"
+        count[key] = 0
+      end
     end
 
     count
   end
 
-  def self.cache_for_type(type = :hour, sensor = false)
+  def self.cache_for_type(_type, sensor = false)
     return all.group_by { |x| "#{x.ran_at.day}-#{x.ran_at.hour}" } unless sensor
-    return where(sid: sensor.sid).group_by do |x|
+    where(sid: sensor.sid).group_by do |x|
       "#{x.ran_at.day}-#{x.ran_at.hour}"
     end
   end
-
-  def self.range_for_type(type=:hour, &block)
-    Range.new(Time.zone.now.beginning_of_day.to_i, Time.zone.now.end_of_day.to_i).step(1.hour) do |seconds_since_epoch|
-      time = Time.zone.at(seconds_since_epoch)
-      key = "#{time.day}-#{time.hour}"
-      block.call(key) if block
-    end
-  end
-
 end

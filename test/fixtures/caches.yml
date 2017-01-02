@@ -7,7 +7,41 @@
 one:
   sid: 1
   cid: 5754
+  event_count: 5
+  tcp_count: 2
+  udp_count: 0
+  icmp_count: 3
+  signature_metrics: {"Signature Message": 5}
+  src_ips: {"80.58.67.84": 5}
+  dst_ips: {"192.168.1.11": 5}
+  ran_at: <%= 5.hours.ago.to_s(:db) %>
+  created_at: <%= 1.minute.ago.to_s(:db) %>
+  updated_at: <%= 1.minute.ago.to_s(:db) %>
 
 two:
   sid: 1
   cid: 5960
+  event_count: 10
+  tcp_count: 3
+  udp_count: 3
+  icmp_count: 4
+  signature_metrics: {"Signature Message 1": 5, "Signature Message 2": 5}
+  src_ips: {"192.168.1.11": 5, "192.168.1.171": 5}
+  dst_ips: {"192.168.1.11": 5, "192.168.1.171": 5}
+  ran_at: <%= 1.hours.ago.to_s(:db) %>
+  created_at: <%= 1.minute.ago.to_s(:db) %>
+  updated_at: <%= 1.minute.ago.to_s(:db) %>
+
+three:
+  sid: 2
+  cid: 5961
+  event_count: 1
+  tcp_count: 0
+  udp_count: 0
+  icmp_count: 1
+  signature_metrics: {"Signature Message": 1}
+  src_ips: {"192.168.1.11": 1}
+  dst_ips: {"80.58.67.84": 1}
+  ran_at: <%= 30.minutes.ago.to_s(:db) %>
+  created_at: <%= 1.minute.ago.to_s(:db) %>
+  updated_at: <%= 1.minute.ago.to_s(:db) %>
