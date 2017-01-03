@@ -2,38 +2,46 @@ one:
   description: 'Unauthorized Root Access'
   hotkey: 1
   locked: true
+  events_count: 2
 
 two:
   description: 'Unauthorized User Access'
   hotkey: 2
   locked: true
+  events_count: 1
 
 three:
   description: 'Attempted Unauthorized Access'
   hotkey: 3
   locked: true
+  events_count: 0
 
 four:
   description: 'Denial of Service Attack'
   hotkey: 4,
   locked: true
+  events_count: 0
 
 five:
   description: 'Policy Violation'
   hotkey: 5
   locked: true
+  events_count: 0
 
 six:
   description: 'Reconnaissance'
   hotkey: 6
   locked: true
+  events_count: 0
 
 seven:
   description: 'Virus Infection'
   hotkey: 7
   locked: true
+  events_count: 0
 
 eight:
   description: 'False Positive'
   hotkey: 8
   locked: true
+  events_count: 0

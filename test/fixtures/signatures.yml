@@ -23,3 +23,13 @@ two:
   sig_sid: 5
   sig_gid: 145
   events_count: 1
+
+three:
+  sig_id: 3
+  sig_class_id: 0
+  sig_name: "[HIDS] Signature message three"
+  sig_priority: 0
+  sig_rev: 1
+  sig_sid: 4
+  sig_gid: 145
+  events_count: 1

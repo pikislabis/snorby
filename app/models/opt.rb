@@ -6,7 +6,7 @@ class Opt < ActiveRecord::Base
 
   belongs_to :sensor, foreign_key: :sid, primary_key: :sid, required: true
 
-  belongs_to :event, foreign_key: [:sid, :cid], primary_key: [:sid, :cid], required: true
+  belongs_to :event, foreign_key: [:sid, :cid], required: true
 
   # property :sid, Integer, :key => true, :index => true, :min => 0
   #

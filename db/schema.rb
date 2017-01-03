@@ -104,7 +104,7 @@ ActiveRecord::Schema.define(version: 20160527182126) do
 
   add_index "encoding", ["encoding_type"], name: "index_encoding_encoding_type", using: :btree
 
-  create_table "event", id: false, force: :cascade do |t|
+  create_table "event", force: :cascade do |t|
     t.integer  "sid",               limit: 4, null: false
     t.integer  "cid",               limit: 4, null: false
     t.integer  "signature",         limit: 4
@@ -115,12 +115,10 @@ ActiveRecord::Schema.define(version: 20160527182126) do
     t.integer  "type",              limit: 4, default: 1
     t.integer  "number_of_events",  limit: 4, default: 0
     t.datetime "timestamp"
-    t.integer  "id",                limit: 4, null: false
   end
 
   add_index "event", ["cid"], name: "index_event_cid", using: :btree
   add_index "event", ["classification_id"], name: "index_event_classification_id", using: :btree
-  add_index "event", ["id"], name: "index_event_id", using: :btree
   add_index "event", ["notes_count"], name: "index_event_notes_count", using: :btree
   add_index "event", ["sid"], name: "index_event_sid", using: :btree
   add_index "event", ["signature"], name: "index_event_signature", using: :btree

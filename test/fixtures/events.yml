@@ -10,6 +10,7 @@ one:
   cid: 1
   type: 1
   signature: 1
+  classification: one
   timestamp: <%= 5.day.ago.to_s(:db) %>
 
 two:
@@ -18,4 +19,14 @@ two:
   cid: 2
   type: 1
   signature: 2
+  classification: one
   timestamp: <%= 3.day.ago.to_s(:db) %>
+
+three:
+  id: 3
+  sid: 1
+  cid: 3
+  type: 1
+  signature: 3
+  classification: two
+  timestamp: <%= 2.day.ago.to_s(:db) %>

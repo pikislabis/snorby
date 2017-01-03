@@ -46,43 +46,35 @@ class Event < ActiveRecord::Base
 
   # property :timestamp, ZonedTime
 
-  has_many :favorites, foreign_key: [ :sid, :cid ],
-    primary_key: [ :sid, :cid ], :dependent => :destroy
+  has_many :favorites, foreign_key: [:sid, :cid], dependent: :destroy
 
-  has_many :users, :through => :favorites
+  has_many :users, through: :favorites
 
-  has_one :severity, :through => :signature, :foreign_key => :sig_priority
+  has_one :severity, through: :signature, foreign_key: :sig_priority
 
-  has_one :payload, :foreign_key => [ :sid, :cid ],
-    :primary_key => [ :sid, :cid ], :dependent => :destroy
+  has_one :payload, foreign_key: [:sid, :cid], dependent: :destroy
 
-  has_one :icmp, :foreign_key => [ :sid, :cid ],
-    :primary_key => [ :sid, :cid ], :dependent => :destroy
+  has_one :icmp, foreign_key: [:sid, :cid], dependent: :destroy
 
-  has_one :tcp, :foreign_key => [ :sid, :cid ],
-    :primary_key => [ :sid, :cid ], :dependent => :destroy
+  has_one :tcp, foreign_key: [:sid, :cid], dependent: :destroy
 
-  has_one :udp, :foreign_key => [ :sid, :cid ],
-    :primary_key => [ :sid, :cid ], :dependent => :destroy
+  has_one :udp, foreign_key: [:sid, :cid], dependent: :destroy
 
-  has_one :opt, :foreign_key => [ :sid, :cid ],
-    :primary_key => [ :sid, :cid ], :dependent => :destroy
+  has_one :opt, foreign_key: [:sid, :cid], dependent: :destroy
 
-  has_many :notes, :foreign_key => [ :sid, :cid ],
-    :primary_key => [ :sid, :cid ], :dependent => :destroy
+  has_many :notes, foreign_key: [:sid, :cid], dependent: :destroy
 
   belongs_to :user
 
-  belongs_to :sensor, :foreign_key => :sid,
-    :primary_key => :sid, :required => true
+  belongs_to :sensor, foreign_key: :sid, required: true
 
-  belongs_to :signature, :primary_key => :sig_id, :foreign_key => :signature
+  belongs_to :signature, foreign_key: :signature
 
-  belongs_to :ip, :foreign_key => [ :sid, :cid ], :primary_key => [ :sid, :cid ]
+  belongs_to :ip, foreign_key: [:sid, :cid]
 
   before_destroy do
-    self.classification.down(:events_count) if self.classification
-    self.signature.down(:events_count) if self.signature
+    classification.decrement(:events_count) if classification
+    signature.decrement(:events_count) if signature
     # Note: Need to decrement Severity, Sensor and User Counts
   end
 
@@ -100,27 +92,25 @@ class Event < ActiveRecord::Base
   }.freeze
 
   def self.last_event_timestamp
-    event = all.order(timestamp: :desc).first
-    timestamp = event ? event.timestamp : Time.zone.now
+    event = unscoped.all.order(timestamp: :desc).first
+    event ? event.timestamp : Time.zone.now
   end
 
   def hids?
-    return true if self.signature.name =~ /\[HIDS\]/
-    false
+    signature.name =~ /\[HIDS\]/
   end
 
   def helpers
     ActionController::Base.helpers
   end
 
-
   def self.unique_events_by_source_ip
     data = []
 
-    ips = Ip.all(:limit => 25, :fields => [:ip_src], :unique => true).map(&:ip_src)
+    ips = Ip.limit(25).distinct.pluck(:ip_src)
     events = ips.collect do |ip|
-      Event.all(:'ip.ip_src' => ip, :order => :timestamp.desc).group_by do |x|
-        x.sig_id
+      Event.includes(:ip).where(iphdr: { ip_src: ip }).order(timestamp: :desc).group_by do |x|
+        x.signature
       end
     end
 
@@ -128,8 +118,7 @@ class Event < ActiveRecord::Base
       next if set.blank?
       next if set.values.blank?
 
-      set.each do |key, value|
-
+      set.each do |_key, value|
         data << value.first
       end
     end
@@ -145,61 +134,47 @@ class Event < ActiveRecord::Base
       per_page: (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i)
     }
 
-    if params.has_key?(:search)
-      sql, count = Snorby::Search.build(params[:match_all], false, params[:search])
+    if params.key?(:search)
+      sql, _count = Snorby::Search.build(params[:match_all], false, params[:search])
 
       sql[0] += " order by #{sort} #{direction}"
-      #sql[0] += " LIMIT ? OFFSET ?"
 
       paginate_by_sql(
         sql,
         page: params[:page],
         per_page: page[:per_page]
       )
+    elsif sql
 
-      # page(params[:page], {
-      #   per_page: (params[:limit] ? params[:limit].to_i : User.current_user.per_page_count.to_i),
-      #   order: 'timestamp DESC'
-      # }, sql, count)
+      paginate_by_sql(
+        sql[0],
+        page: params[:page],
+        per_page: page[:per_page]
+      )
+
     else
 
-      if sql
-
-        paginate_by_sql(
-          sql[0],
-          page: params[:page],
-          per_page: page[:per_page]
-        )
-
+      if SORT[sort].casecmp 'event'
+        page[:order] = '#{sort} #{direction}'
       else
-
-        if SORT[sort].downcase == 'event'
-          page.merge!(order: '#{sort} #{direction}')
-        else
-          page.merge!(
-            :order => [Event.send(SORT[sort].to_sym).send(sort).send(direction),
-                       :timestamp.send(direction)],
-            :links => [Event.relationships[SORT[sort].to_s].inverse]
-          )
-        end
-
-        unless params.has_key?(:classification_all)
-          page.merge!(:classification_id => nil)
-        end
-
-        if params.has_key?(:user_events)
-          relationship = Event.relationships['user'].inverse
-
-          if page.has_key?(:links)
-            page[:links].push(relationship)
-          else
-            page[:links] = [relationship]
-          end
-        end
-
-        paginate(page: (params[:page] || 1).to_i, per_page: page[:per_page])
+        page[:order] = [Event.send(SORT[sort].to_sym).send(sort).send(direction),
+                        :timestamp.send(direction)]
+        page[:link] = [Event.relationships[SORT[sort].to_s].inverse]
       end
 
+      page[:classification_id] = nil unless params.key?(:classification_all)
+
+      if params.key?(:user_events)
+        relationship = Event.relationships['user'].inverse
+
+        if page.key?(:links)
+          page[:links].push(relationship)
+        else
+          page[:links] = [relationship]
+        end
+      end
+
+      paginate(page: (params[:page] || 1).to_i, per_page: page[:per_page])
     end
   end
 
@@ -216,10 +191,10 @@ class Event < ActiveRecord::Base
     sid, gid = [/\$\$sid\$\$/, /\$\$gid\$\$/]
 
     @signature_url = if Setting.signature_lookup?
-      Setting.find(:signature_lookup)
-    else
-      SIGNATURE_URL
-    end
+                       Setting.find(:signature_lookup)
+                     else
+                       SIGNATURE_URL
+                     end
 
     @signature_url.sub(sid, signature.sig_sid.to_s).sub(gid, signature.sig_gid.to_s)
   end
@@ -233,17 +208,12 @@ class Event < ActiveRecord::Base
   end
 
   def send_notification
-    Delayed::Job.enqueue(Snorby::Jobs::AlertNotifications.new(self.sid, self.cid))
+    Delayed::Job.enqueue(Snorby::Jobs::AlertNotifications.new(sid, cid))
   end
 
   def self.limit(limit = 25)
     all.limit(limit)
   end
-
-  # TODO
-  #def self.order(column=:timestamp, order=:desc)
-  #  all(:order => column.to_sym.send(order.to_sym))
-  #end
 
   def secondary_id
     "#{sid}_#{cid}"
@@ -274,25 +244,25 @@ class Event < ActiveRecord::Base
   end
 
   def self.find_classification(classification_id)
-    all(:classification_id => classification_id)
+    where(classification_id: classification_id)
   end
 
   def self.find_signature(sig_id)
-    all(:sig_id => sig_id)
+    where(sig_id: sig_id)
   end
 
   def self.find_sensor(sensor)
-    all(:sensor => sensor)
+    where(sensor: sensor)
   end
 
   def self.between(start_time, end_time)
     all(:timestamp.gte => start_time, :timestamp.lte => end_time,
-        :order => [:timestamp.desc])
+        order: [:timestamp.desc])
   end
 
   def self.between_time(start_time, end_time)
     all(:timestamp.gte => start_time, :timestamp.lt => end_time,
-        :order => [:timestamp.desc])
+        order: [:timestamp.desc])
   end
 
   def self.update_classification_by_session(ids, classification, user_id = nil)
@@ -349,16 +319,16 @@ class Event < ActiveRecord::Base
     event_count = 0
 
     @classification = if classification.to_i.zero?
-      "NULL"
-    else
-      Classification.find(classification.to_i)
-    end
+                        'NULL'
+                      else
+                        Classification.find(classification.to_i)
+                      end
 
     uid = if user_id
-      user_id
-    else
-      User.current_user.id
-    end
+            user_id
+          else
+            User.current_user.id
+          end
 
     if @classification
       update = "UPDATE `event` SET `classification_id` = #{(@classification == "NULL" ? @classification : @classification.id)}, `user_id` = #{uid} WHERE "
@@ -367,30 +337,30 @@ class Event < ActiveRecord::Base
       process = lambda do |e|
         event_data = e.split(',')
 
-        event_data.each_with_index do |e, index|
+        event_data.each_with_index do |ev, index|
           event_count += 1
 
-          event = e.split('-')
+          event = ev.split('-')
           events.push("(`sid` = #{event.first.to_i} and `cid` = #{event.last.to_i})")
 
-          if ((index + 1) % 10000) == 0
-            tmp = update
-            tmp += events.join(" OR ")
-            tmp += ";"
-            db_execute(tmp)
-            events = []
-          end
-        end
+          next unless ((index + 1) % 10_000) == 0
 
-        unless events.empty?
           tmp = update
-          tmp += events.join(" OR ")
-          tmp += ";"
+          tmp += events.join(' OR ')
+          tmp += ';'
           db_execute(tmp)
           events = []
         end
 
-        db_execute("update classifications set events_count = (select count(*) from event where event.`classification_id` = classifications.id);")
+        unless events.empty?
+          tmp = update
+          tmp += events.join(' OR ')
+          tmp += ';'
+          db_execute(tmp)
+          events = []
+        end
+
+        db_execute('update classifications set events_count = (select count(*) from event where event.`classification_id` = classifications.id);')
         event_count
       end
 
@@ -409,7 +379,8 @@ class Event < ActiveRecord::Base
       event = e.split('-')
       events << find_by(sid: event.first, cid: event.last)
     end
-    return events
+
+    events
   end
 
   def data_id
@@ -432,49 +403,43 @@ class Event < ActiveRecord::Base
       # return "#{timestamp.strftime('%l:%M %p')}" if Date.today.to_date == timestamp.to_date
       # "#{timestamp.strftime('%m/%d/%Y')}"
     # end
-    return "#{timestamp.strftime('%l:%M %p')}" if Time.zone.today.to_date == timestamp.to_date
-    "#{timestamp.strftime('%m/%d/%Y')}"
+    return timestamp.strftime('%l:%M %p').to_s if Time.zone.today.to_date == timestamp.to_date
+    timestamp.strftime('%m/%d/%Y').to_s
   end
 
-
   def detailed_json
-
     geoip = Setting.geoip?
     ip = self.ip
 
     event = {
-      :sid => self.sid,
-      :cid => self.cid,
-      :hostname => self.sensor.sensor_name,
-      :severity => self.signature.sig_priority,
-      :session_count => self.number_of_events,
-      :ip_src => self.ip.ip_src.to_s,
-      :ip_dst => self.ip.ip_dst.to_s,
-      :asset_names => self.ip.asset_names,
-      :timestamp => self.pretty_time,
-      :datetime => self.timestamp.strftime('%A, %b %d, %Y at %I:%M:%S %p'),
-      :message =>  self.signature.name,
-      :geoip => false,
-      :src_port => src_port,
-      :dst_port => dst_port,
-      :users_count => users_count,
-      :notes_count => notes_count,
-      :sig_id => signature.sig_id,
-      :favorite => favorite?
+      sid: sid,
+      cid: cid,
+      hostname: sensor.sensor_name,
+      severity: signature.sig_priority,
+      session_count: number_of_events,
+      ip_src: self.ip.ip_src.to_s,
+      ip_dst: self.ip.ip_dst.to_s,
+      asset_names: self.ip.asset_names,
+      timestamp: pretty_time,
+      datetime: timestamp.strftime('%A, %b %d, %Y at %I:%M:%S %p'),
+      message:  signature.name,
+      geoip: false,
+      src_port: src_port,
+      dst_port: dst_port,
+      users_count: users_count,
+      notes_count: notes_count,
+      sig_id: signature.sig_id,
+      favorite: favorite?
 
     }
 
     if geoip
-      event.merge!({
-        :geoip => true,
-        :src_geoip => ip.geoip[:source],
-        :dst_geoip => ip.geoip[:destination]
-      })
+      event.merge!(geoip: true, src_geoip: ip.geoip[:source],
+                   dst_geoip: ip.geoip[:destination])
     end
 
     event
   end
-
 
   #
   # To Json From Time Range
@@ -484,15 +449,12 @@ class Event < ActiveRecord::Base
   # the snort schema being legacy this was
   # needed for the time being.
   #
-  # @param [String] time Start timeåå
+  # @param [String] time Start time
   #
   # @return [Hash] hash of events between range.
   #
   def self.to_json_since(time)
-
-    if !time
-      time = Time.zone.now
-    end
+    time ||= Time.zone.now
 
     geoip = Setting.geoip?
     events = Event.where(classification_id: nil)
@@ -504,29 +466,27 @@ class Event < ActiveRecord::Base
       ip = event.ip
 
       event = {
-        :sid => event.sid,
-        :cid => event.cid,
-        :hostname => event.sensor.sensor_name,
-        :severity => event.signature.sig_priority,
-        :ip_src => ip.ip_src.to_s,
-        :ip_dst => ip.ip_dst.to_s,
-        :timestamp => event.pretty_time,
-        :datetime => event.timestamp.strftime('%A, %b %d, %Y at %I:%M:%S %p'),
-        :message => event.signature.name,
-        :geoip => false
+        sid: event.sid,
+        cid: event.cid,
+        hostname: event.sensor.sensor_name,
+        severity: event.signature.sig_priority,
+        ip_src: ip.ip_src.to_s,
+        ip_dst: ip.ip_dst.to_s,
+        timestamp: event.pretty_time,
+        datetime: event.timestamp.strftime('%A, %b %d, %Y at %I:%M:%S %p'),
+        message: event.signature.name,
+        geoip: false
       }
 
       if geoip
-        event.merge!({
-          :geoip => true,
-          :src_geoip => ip.geoip[:source],
-          :dst_geoip => ip.geoip[:destination]
-        })
+        event.merge!(geoip: true, src_geoip: ip.geoip[:source],
+                     dst_geoip: ip.geoip[:destination])
       end
 
       json[:events] << event
     end
-    return json
+
+    json
   end
 
   def favorite?
@@ -535,7 +495,7 @@ class Event < ActiveRecord::Base
   end
 
   def toggle_favorite
-    if self.favorite?
+    if favorite?
       destroy_favorite
     else
       create_favorite
@@ -543,36 +503,26 @@ class Event < ActiveRecord::Base
   end
 
   def create_favorite
-    favorite = Favorite.create(:sid => self.sid, :cid => self.cid, :user => User.current_user)
+    Favorite.create(sid: sid, cid: cid, user: User.current_user)
   end
 
   def destroy_favorite
-    favorite = User.current_user.favorites.find_by(sid: self.sid, cid: self.cid)
+    favorite = User.current_user.favorites.find_by(sid: sid, cid: cid)
     favorite.destroy! if favorite
   end
 
   def protocol
-    if tcp?
-      return :tcp
-    elsif udp?
-      return :udp
-    elsif icmp?
-      return :icmp
-    else
-      nil
-    end
+    return :tcp if tcp?
+    return :udp if udp?
+    return :icmp if icmp?
+    nil
   end
 
   def protocol_data
-    if tcp?
-      return [:tcp, self.tcp]
-    elsif udp?
-      return [:udp, self.udp]
-    elsif icmp?
-      return [:icmp, self.icmp]
-    else
-      false
-    end
+    return [:tcp, tcp] if tcp?
+    return [:udp, udp] if udp?
+    return [:icmp, icmp] if icmp?
+    false
   end
 
   def source_port
@@ -606,7 +556,7 @@ class Event < ActiveRecord::Base
   end
 
   def in_xml
-    %{
+    %(
       <snorby>
         #{to_xml(skip_instruct: true)}
         #{ip.to_xml(skip_instruct: true)}
@@ -614,28 +564,26 @@ class Event < ActiveRecord::Base
         #{classification.to_xml(skip_instruct: true) if classification}
         #{payload.to_xml(skip_instruct: true) if payload}
       </snorby>
-    }.chomp
+    ).chomp
   end
 
   def in_json
     type, proto = protocol_data
-    json = {
-      :sid => sid,
-      :cid => cid,
-      :ip => ip,
-      :src_ip => ip.ip_src.to_s,
-      :src_port => src_port,
-      :dst_ip => ip.ip_dst.to_s,
-      :dst_port => dst_port,
-      :type => type,
-      :proto => proto,
-      :payload => payload,
-      :payload_html => payload ? payload.to_html : '',
-      :sensor => sensor,
-      :favorite => favorite?
-
+    {
+      sid: sid,
+      cid: cid,
+      ip: ip,
+      src_ip: ip.ip_src.to_s,
+      src_port: src_port,
+      dst_ip: ip.ip_dst.to_s,
+      dst_port: dst_port,
+      type: type,
+      proto: proto,
+      payload: payload,
+      payload_html: payload ? payload.to_html : '',
+      sensor: sensor,
+      favorite: favorite?
     }
-    return json
   end
 
   #
@@ -678,15 +626,10 @@ class Event < ActiveRecord::Base
   # port for the event if available.
   #
   def src_port
-    if icmp?
-      return 0
-    elsif tcp?
-      return tcp.tcp_sport
-    elsif udp?
-      return udp.udp_sport
-    else
-      return nil
-    end
+    return 0 if icmp?
+    return tcp.tcp_sport if tcp?
+    return udp.udp_sport if udp?
+    nil
   end
 
   #
@@ -696,28 +639,18 @@ class Event < ActiveRecord::Base
   # port for the event if available.
   #
   def dst_port
-    if icmp?
-      return 0
-    elsif tcp?
-      return tcp.tcp_dport
-    elsif udp?
-      return udp.udp_dport
-    else
-      return nil
-    end
+    return 0 if icmp?
+    return tcp.tcp_dport if tcp?
+    return udp.udp_dport if udp?
+    nil
   end
 
-  def self.classify_from_collection(events, classification, user, reclassify=false)
+  def self.classify_from_collection(events, classification, user, reclassify = false)
     @classification = Classification.get(classification)
     @user = User.get(user)
 
     events.each do |event|
-
-      old_classification = if event.classification.present?
-        event.classification
-      else
-        nil
-      end
+      old_classification = event.classification if event.classification.present?
 
       next if old_classification == @classification
       next if old_classification && reclassify == false
@@ -731,21 +664,20 @@ class Event < ActiveRecord::Base
       else
         Rails.logger.info "ERROR: #{event.errors.inspect}"
       end
-
     end
   rescue => e
     Rails.logger.info(e.backtrace)
   end
 
   def self.build_search_hash(column, operator, value)
-   ["#{column} #{operator}", value]
+    ["#{column} #{operator}", value]
   end
 
-  def self.search(params, pager={})
+  def self.search(params, _pager = {})
     @search = {}
     search = []
     sql = []
-    params.each do |key, v|
+    params.each do |_key, v|
       column = v['column'].to_sym
       operator = v['operator'].to_sym
       value = v['value']
@@ -756,20 +688,18 @@ class Event < ActiveRecord::Base
       end
     end
 
-    search.push sql.collect { |x| x.first }.join(" AND ")
-    search.push(sql.collect { |x| x.last }.flatten).flatten!
+    search.push sql.collect(&:first).join(' AND ')
+    search.push(sql.collect(&:last).flatten).flatten!
 
     p search
 
-
-
-    @search.merge!({:sid => params[:sid].to_i}) unless params[:sid].blank?
+    @search.merge!({sid: params[:sid].to_i}) unless params[:sid].blank?
 
     unless params[:classification_id].blank?
       if params[:classification_id].to_i == 0
-        @search.merge!({:classification_id => nil})
+        @search.merge!({classification_id: nil})
       else
-        @search.merge!({:classification_id => params[:classification_id].to_i})
+        @search.merge!({classification_id: params[:classification_id].to_i})
       end
     end
 
@@ -821,7 +751,7 @@ class Event < ActiveRecord::Base
 
       unless params[:time_start].blank? || params[:time_end].blank?
         @search.merge!({
-          :conditions => ['timestamp >= ? AND timestamp <= ?',
+          conditions: ['timestamp >= ? AND timestamp <= ?',
             Time.at(params[:time_start].to_i),
             Time.at(params[:time_end].to_i)
         ]})
@@ -831,11 +761,11 @@ class Event < ActiveRecord::Base
 
       if params[:timestamp] =~ /\s\-\s/
         start_time, end_time = params[:timestamp].split(' - ')
-        @search.merge!({:conditions => ['timestamp >= ? AND timestamp <= ?',
+        @search.merge!({conditions: ['timestamp >= ? AND timestamp <= ?',
                        Chronic.parse(start_time).beginning_of_day,
                        Chronic.parse(end_time).end_of_day]})
       else
-        @search.merge!({:conditions => ['timestamp >= ? AND timestamp <= ?',
+        @search.merge!({conditions: ['timestamp >= ? AND timestamp <= ?',
                        Chronic.parse(params[:timestamp]).beginning_of_day,
                        Chronic.parse(params[:timestamp]).end_of_day]})
       end
@@ -848,9 +778,9 @@ class Event < ActiveRecord::Base
 
     search
 
-  rescue NetAddr::ValidationError => e
+  rescue NetAddr::ValidationError
     {}
-  rescue ArgumentError => e
+  rescue ArgumentError
     {}
   end
 
