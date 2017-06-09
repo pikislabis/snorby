@@ -6,14 +6,14 @@ services:
   - mysql
 before_install:
   - PWD=`pwd`
+  - "echo '## Adding repositories'"
+  - "sudo add-apt-repository ppa:ecometrica/servers -y"
   - "echo '## Installing dependencies'"
   - "sudo apt-get update"
   - "sudo apt-get install -y openssl build-essential xorg libssl-dev xfonts-75dpi"
   - "echo '## Downloading wkhtmltopdf'"
-  - "wget https://bitbucket.org/wkhtmltopdf/wkhtmltopdf/downloads/wkhtmltox-0.13.0-alpha-7b36694_linux-precise-amd64.deb"
-  - "echo '## Installing wkhtmltox'"
-  - "sudo dpkg -i wkhtmltox-0.13.0-alpha-7b36694_linux-precise-amd64.deb"
-  - "echo `which wkhtmltopdf`"
+  - "sudo apt-get install wkhtmltopdf -y --no-install-recommends"
+  - "sudo ln -sf /usr/bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf"
 before_script:
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
