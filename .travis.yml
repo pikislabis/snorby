@@ -17,6 +17,7 @@ before_install:
   - "sudo apt-get install wkhtmltopdf -y --no-install-recommends"
   - "sudo ln -sf /usr/bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf"
 before_script:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS snorby_test;'
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
   - bundle exec rake snorby:start_worker RAILS_ENV=test
