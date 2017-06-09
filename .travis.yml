@@ -12,11 +12,12 @@ before_install:
   - "sudo add-apt-repository ppa:ecometrica/servers -y"
   - "echo '## Installing dependencies'"
   - "sudo apt-get update && sudo apt-get install --no-install-recommends -y openssl build-essential xorg libssl-dev xfonts-75dpi"
-  - "echo '## Downloading wkhtmltopdf'"
-  - "sudo apt-get install wkhtmltopdf -y --no-install-recommends"
-  - "sudo ln -sf /usr/bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf"
 before_script:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS snorby_test;'
+  - wget http://download.gna.org/wkhtmltopdf/0.12/0.12.3/wkhtmltox-0.12.3_linux-generic-amd64.tar.xz
+  - tar -xJf wkhtmltox-0.12.3_linux-generic-amd64.tar.xz
+  - cd wkhtmltox
+  - sudo chown root:root bin/wkhtmltopdf
+  - sudo cp -r * /usr/
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
   - bundle exec rake snorby:start_worker RAILS_ENV=test
