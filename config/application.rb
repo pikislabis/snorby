@@ -80,7 +80,7 @@ module Snorby
       # try to detect zone using
       detected_time_zone = TimeZone::Local.get
 
-      if detected_time_zone
+      if detected_time_zone.is_a? TZInfo::DataTimezone
         time_zone = detected_time_zone.name
         puts "No time_zone specified in snorby_config.yml; detected time_zone: #{time_zone}"
       else
