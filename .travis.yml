@@ -1,3 +1,5 @@
+dist: trusty
+sudo: required
 language: ruby
 cache: bundler
 rvm:
@@ -6,15 +8,16 @@ services:
   - mysql
 before_install:
   - PWD=`pwd`
+  - "echo '## Adding repositories'"
+  - "sudo add-apt-repository ppa:ecometrica/servers -y"
   - "echo '## Installing dependencies'"
-  - "sudo apt-get update"
-  - "sudo apt-get install -y openssl build-essential xorg libssl-dev xfonts-75dpi"
-  - "echo '## Downloading wkhtmltopdf'"
-  - "wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-wheezy-amd64.deb"
-  - "echo '## Installing wkhtmltox'"
-  - "sudo dpkg -i wkhtmltox-0.12.2.1_linux-wheezy-amd64.deb"
-  - "echo `which wkhtmltopdf`"
+  - "sudo apt-get update && sudo apt-get install --no-install-recommends -y openssl build-essential xorg libssl-dev xfonts-75dpi"
 before_script:
+  - wget https://downloads.wkhtmltopdf.org/0.12/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
+  - tar -xJf wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
+  - sudo chown root:root wkhtmltox/bin/wkhtmltopdf
+  - sudo cp -r wkhtmltox/* /usr/local/
+  - rm -rf wkhtmltox
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
   - bundle exec rake snorby:start_worker RAILS_ENV=test
