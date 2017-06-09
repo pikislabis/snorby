@@ -17,7 +17,7 @@ before_script:
   - tar -xJf wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
   - cd wkhtmltox
   - sudo chown root:root bin/wkhtmltopdf
-  - sudo cp -r * /usr/
+  - sudo cp -r * /usr/local/
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
   - bundle exec rake snorby:start_worker RAILS_ENV=test
